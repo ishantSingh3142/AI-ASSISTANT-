@@ -14,6 +14,8 @@ import time as _time
 import threading
 import queue
 import json
+import os
+import shutil
 from pathlib import Path
 import xml.etree.ElementTree as ET
 from html import unescape
@@ -423,17 +425,42 @@ def play_audio_file(file_path, async_play=True):
                 try:
                     if _HAS_WIN32COM:
                         pythoncom.CoInitialize()
+                        # To prevent Windows Media Player from locking the master voice file in voices/,
+                        # copy to a transient playback file in cache/
+                        play_copy = CACHE_DIR / f"play_{int(_time.time() * 1000) % 1000000}.mp3"
+                        target_to_play = p
+                        try:
+                            shutil.copyfile(str(p), str(play_copy))
+                            target_to_play = play_copy
+                        except Exception:
+                            pass
+
                         wmp = win32com.client.Dispatch("WMPlayer.OCX")
-                        media = wmp.newMedia(str(p))
+                        media = wmp.newMedia(str(target_to_play))
                         wmp.currentPlaylist.appendItem(media)
                         wmp.controls.play()
-                        if not async_play:
-                            t0 = _time.time()
-                            while _time.time() - t0 < 30:
-                                state = getattr(wmp, "playState", 0)
-                                if state in (1, 8):  # 1=stopped, 8=mediaEnded
-                                    break
-                                _time.sleep(0.1)
+
+                        # Monitor playback completion and properly release COM handles
+                        t0 = _time.time()
+                        while _time.time() - t0 < 35:
+                            state = getattr(wmp, "playState", 0)
+                            if state in (1, 8):  # 1=stopped, 8=mediaEnded, 10=ready
+                                break
+                            _time.sleep(0.1)
+
+                        try:
+                            wmp.controls.stop()
+                            wmp.close()
+                            wmp.currentPlaylist.clear()
+                        except Exception:
+                            pass
+
+                        # Clean up transient play copy
+                        if target_to_play == play_copy:
+                            try:
+                                play_copy.unlink(missing_ok=True)
+                            except Exception:
+                                pass
                 except Exception as e:
                     print("[AUDIO] MP3 playback note:", e)
             if async_play:
@@ -450,6 +477,7 @@ def download_elevenlabs_voice(voice_id="IRHApOXLvnW57QJPQH2P"):
     """
     Downloads voice preview audio and metadata for an ElevenLabs voice ID.
     Works for any shared or community voice without requiring an API key.
+    Employs lock-resistant atomic file replacement to prevent [Errno 13] on Windows.
     Returns (success: bool, info_dict: dict, file_path: str, message: str)
     """
     try:
@@ -473,9 +501,38 @@ def download_elevenlabs_voice(voice_id="IRHApOXLvnW57QJPQH2P"):
             return False, data, None, "No preview audio URL found in voice metadata."
 
         out_audio = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
-        aud_req = urllib.request.Request(preview_url, headers={"User-Agent": "Mozilla/5.0"})
-        with urllib.request.urlopen(aud_req, timeout=25) as a_resp, open(out_audio, "wb") as af:
-            af.write(a_resp.read())
+        temp_dl = VOICES_DIR / f"elevenlabs_{voice_id}_dl_{int(_time.time())}.tmp"
+
+        aud_req = urllib.request.Request(preview_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        with urllib.request.urlopen(aud_req, timeout=25) as a_resp:
+            audio_bytes = a_resp.read()
+
+        with open(temp_dl, "wb") as tf:
+            tf.write(audio_bytes)
+
+        # Atomic replacement with Windows handle-lock recovery
+        if out_audio.exists():
+            try:
+                os.replace(temp_dl, out_audio)
+            except PermissionError:
+                # If existing out_audio is currently open by a media player or process, rename it to .old and place new file
+                old_bak = VOICES_DIR / f"elevenlabs_{voice_id}_preview_{int(_time.time())}.old"
+                try:
+                    os.rename(out_audio, old_bak)
+                    os.replace(temp_dl, out_audio)
+                except Exception:
+                    # Final fallback: copy bytes
+                    shutil.copyfile(str(temp_dl), str(out_audio))
+                    temp_dl.unlink(missing_ok=True)
+        else:
+            os.replace(temp_dl, out_audio)
+
+        # Clean up any leftover .old files if unblocked
+        for old_f in VOICES_DIR.glob(f"elevenlabs_{voice_id}_*.old"):
+            try:
+                old_f.unlink(missing_ok=True)
+            except Exception:
+                pass
 
         return True, data, str(out_audio), f"Voice '{data.get('name')}' downloaded successfully ({out_audio.stat().st_size // 1024} KB)."
     except Exception as e:
@@ -561,8 +618,14 @@ def synthesize_elevenlabs_speech(text, voice_id="IRHApOXLvnW57QJPQH2P", api_key=
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
             content = resp.read()
-            with open(cache_file, "wb") as cf:
+            temp_cf = CACHE_DIR / f"el_{text_hash[:16]}_{int(_time.time())}.tmp"
+            with open(temp_cf, "wb") as cf:
                 cf.write(content)
+            try:
+                os.replace(temp_cf, cache_file)
+            except Exception:
+                shutil.copyfile(str(temp_cf), str(cache_file))
+                temp_cf.unlink(missing_ok=True)
         return True, str(cache_file), None
     except Exception as ex:
         return False, None, str(ex)
