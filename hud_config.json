@@ -12,10 +12,14 @@
     "quick",
     "hardware"
   ],
-  "voice_rate": 175,
+  "voice_rate": 200,
   "voice_index": 1,
   "voice_name": "Microsoft Zira Desktop - English (United States)",
-  "sfx_enabled": true,
+  "tts_engine": "sapi",
+  "elevenlabs_voice_id": "IRHApOXLvnW57QJPQH2P",
+  "elevenlabs_voice_name": "Adam - American, Dark and Tough",
+  "elevenlabs_api_key": "",
+  "sfx_enabled": false,
   "visible": {
     "lp": true,
     "cp": true,

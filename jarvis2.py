@@ -135,6 +135,10 @@ DEFAULT_CONFIG = {
     "voice_rate": 175,
     "voice_index": 0,
     "voice_name": "Microsoft David Desktop - English (United States)",
+    "tts_engine": "sapi",
+    "elevenlabs_voice_id": "IRHApOXLvnW57QJPQH2P",
+    "elevenlabs_voice_name": "Adam - American, Dark and Tough",
+    "elevenlabs_api_key": "",
     "sfx_enabled": True,
     "visible": {
         "lp": True,
@@ -246,6 +250,10 @@ def clean_for_speech(text):
 # ╚══════════════════════════════════════════════════════════════════╝
 
 SFX_DIR = Path(__file__).resolve().parent / "sfx"
+VOICES_DIR = Path(__file__).resolve().parent / "voices"
+VOICES_DIR.mkdir(parents=True, exist_ok=True)
+CACHE_DIR = Path(__file__).resolve().parent / "cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 def init_sfx_library():
     """Synthesizes high-fidelity 44.1kHz sci-fi audio effects into sfx/ if missing."""
@@ -389,6 +397,175 @@ def play_sfx(name, force=False):
             winsound.PlaySound(str(p), winsound.SND_FILENAME | winsound.SND_ASYNC)
     except Exception as e:
         print(f"SFX error ({name}):", e)
+
+
+def play_audio_file(file_path, async_play=True):
+    """
+    Plays an audio file (.mp3, .wav) reliably on Windows.
+    For .wav files, winsound is used.
+    For .mp3 files, win32com WMPlayer.OCX is used.
+    """
+    try:
+        p = Path(file_path).resolve()
+        if not p.exists():
+            print(f"[AUDIO] File not found: {p}")
+            return False
+
+        ext = p.suffix.lower()
+        if ext == ".wav":
+            flags = winsound.SND_FILENAME
+            if async_play:
+                flags |= winsound.SND_ASYNC
+            winsound.PlaySound(str(p), flags)
+            return True
+        elif ext == ".mp3":
+            def _play_mp3():
+                try:
+                    if _HAS_WIN32COM:
+                        pythoncom.CoInitialize()
+                        wmp = win32com.client.Dispatch("WMPlayer.OCX")
+                        media = wmp.newMedia(str(p))
+                        wmp.currentPlaylist.appendItem(media)
+                        wmp.controls.play()
+                        if not async_play:
+                            t0 = _time.time()
+                            while _time.time() - t0 < 30:
+                                state = getattr(wmp, "playState", 0)
+                                if state in (1, 8):  # 1=stopped, 8=mediaEnded
+                                    break
+                                _time.sleep(0.1)
+                except Exception as e:
+                    print("[AUDIO] MP3 playback note:", e)
+            if async_play:
+                threading.Thread(target=_play_mp3, daemon=True).start()
+            else:
+                _play_mp3()
+            return True
+    except Exception as ex:
+        print("[AUDIO] Play error:", ex)
+    return False
+
+
+def download_elevenlabs_voice(voice_id="IRHApOXLvnW57QJPQH2P"):
+    """
+    Downloads voice preview audio and metadata for an ElevenLabs voice ID.
+    Works for any shared or community voice without requiring an API key.
+    Returns (success: bool, info_dict: dict, file_path: str, message: str)
+    """
+    try:
+        url = f"https://api.elevenlabs.io/v1/shared-voices/{voice_id}"
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        meta_file = VOICES_DIR / f"{voice_id}.json"
+        with open(meta_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+
+        preview_url = data.get("preview_url")
+        if not preview_url:
+            for vl in data.get("verified_languages", []):
+                if vl.get("preview_url"):
+                    preview_url = vl["preview_url"]
+                    break
+
+        if not preview_url:
+            return False, data, None, "No preview audio URL found in voice metadata."
+
+        out_audio = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
+        aud_req = urllib.request.Request(preview_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(aud_req, timeout=25) as a_resp, open(out_audio, "wb") as af:
+            af.write(a_resp.read())
+
+        return True, data, str(out_audio), f"Voice '{data.get('name')}' downloaded successfully ({out_audio.stat().st_size // 1024} KB)."
+    except Exception as e:
+        return False, {}, None, str(e)
+
+
+def get_elevenlabs_voice_status(voice_id="IRHApOXLvnW57QJPQH2P"):
+    """Returns information on whether the voice preview and metadata are cached locally."""
+    audio_path = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
+    meta_path = VOICES_DIR / f"{voice_id}.json"
+    is_downloaded = audio_path.exists() and audio_path.stat().st_size > 1000
+    meta = {}
+    if meta_path.exists():
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            pass
+    return {
+        "downloaded": is_downloaded,
+        "audio_path": str(audio_path) if is_downloaded else None,
+        "size_kb": (audio_path.stat().st_size // 1024) if is_downloaded else 0,
+        "name": meta.get("name", "Adam - American, Dark and Tough"),
+        "accent": meta.get("accent", "american"),
+        "gender": meta.get("gender", "male"),
+        "description": meta.get("description", "A tough hero, weathered by years of experience. American accent."),
+        "voice_id": voice_id
+    }
+
+
+def audition_elevenlabs_voice(voice_id="IRHApOXLvnW57QJPQH2P"):
+    """Auditions the downloaded ElevenLabs voice sample."""
+    audio_path = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
+    if not audio_path.exists():
+        success, meta, p, msg = download_elevenlabs_voice(voice_id)
+        if not success:
+            speak(f"Unable to download ElevenLabs voice. Error: {msg}")
+            return False
+        audio_path = Path(p)
+
+    status = get_elevenlabs_voice_status(voice_id)
+    terminal_feed_log("VOICE", f"Auditioning ElevenLabs Voice: {status['name']} (ID: {voice_id})")
+    _safe_ui_update(lambda: set_status(f"◈  AUDITIONING ELEVENLABS: {status['name'][:24]}...", C.get("cyan_br", "#40ffff")))
+    play_audio_file(audio_path, async_play=True)
+    return True
+
+
+def synthesize_elevenlabs_speech(text, voice_id="IRHApOXLvnW57QJPQH2P", api_key=None):
+    """
+    Synthesizes custom text into speech using ElevenLabs Neural TTS API.
+    Requires a valid ElevenLabs API key.
+    """
+    if not api_key:
+        api_key = hud_config.get("elevenlabs_api_key", "").strip()
+    if not api_key:
+        return False, None, "ElevenLabs API key not configured."
+
+    import hashlib
+    text_hash = hashlib.md5(f"{voice_id}_{text}".encode("utf-8")).hexdigest()
+    cache_file = CACHE_DIR / f"el_{text_hash[:16]}.mp3"
+    if cache_file.exists() and cache_file.stat().st_size > 500:
+        return True, str(cache_file), None
+
+    try:
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        payload = json.dumps({
+            "text": text,
+            "model_id": "eleven_monolingual_v1",
+            "voice_settings": {
+                "stability": 0.5,
+                "similarity_boost": 0.75
+            }
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "xi-api-key": api_key,
+                "User-Agent": "JARVIS-AI-Voice-Assistant/2.0"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            content = resp.read()
+            with open(cache_file, "wb") as cf:
+                cf.write(content)
+        return True, str(cache_file), None
+    except Exception as ex:
+        return False, None, str(ex)
 
 
 # ╔══════════════════════════════════════════════════════════════════╗
@@ -619,6 +796,12 @@ def _tts_daemon_loop():
                 _tts_queue.task_done()
                 continue
 
+            if isinstance(item, tuple) and item[0] == "AUDITION_ELEVENLABS":
+                vid = item[1]
+                audition_elevenlabs_voice(vid)
+                _tts_queue.task_done()
+                continue
+
             text = item
             if not text or not speaker:
                 _tts_queue.task_done()
@@ -629,6 +812,23 @@ def _tts_daemon_loop():
 
             # Clean and expand symbols so the complete result is spoken naturally
             cleaned_text = clean_for_speech(text)
+
+            # Check if ElevenLabs Neural Cloud TTS is active
+            tts_mode = hud_config.get("tts_engine", "sapi")
+            el_key = hud_config.get("elevenlabs_api_key", "").strip()
+            el_voice = hud_config.get("elevenlabs_voice_id", "IRHApOXLvnW57QJPQH2P")
+            if tts_mode == "elevenlabs" and el_key:
+                _safe_ui_update(lambda: set_status("◈  ELEVENLABS NEURAL TTS...", C.get("cyan_br", "#40ffff")))
+                succ, el_audio, err = synthesize_elevenlabs_speech(cleaned_text, el_voice, el_key)
+                if succ and el_audio:
+                    play_audio_file(el_audio, async_play=False)
+                    if _tts_queue.empty() and not _anim.get("processing", False):
+                        _anim["speaking"] = False
+                        _safe_ui_update(lambda: set_status("◎  SYSTEMS NOMINAL", C.get("cyan", "#00e5ff")))
+                    _tts_queue.task_done()
+                    continue
+                else:
+                    terminal_feed_log("TTS", f"ElevenLabs fallback to SAPI: {err}")
 
             # Split into sentence chunks so long outputs are never truncated
             sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', cleaned_text) if s.strip()]
@@ -1266,6 +1466,56 @@ def execute_command_thread(raw_query):
     if any(k in query for k in ("open voice lab", "open audio lab", "voice lab", "audio lab", "voice settings", "audio settings")):
         root.after(0, open_voice_audio_modal)
         speak("Opening Voice and Cybernetic Audio Lab.")
+        _finish_command()
+        return
+
+    # ElevenLabs Neural Voice Commands
+    if any(k in query for k in ("download voice", "download elevenlabs voice", "download eleven labs voice", "download eleven labs", "download adam voice", "download voice sample")):
+        play_sfx("downlink")
+        terminal_feed_log("VOICE", "Downloading ElevenLabs voice IRHApOXLvnW57QJPQH2P (Adam)...")
+        speak("Downloading ElevenLabs voice profile Adam, Voice ID IRHApOXLvnW57QJPQH2P.")
+        def _bg_dl():
+            succ, meta, path, msg = download_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
+            if succ:
+                terminal_feed_log("VOICE", f"ElevenLabs Voice Downloaded: {meta.get('name', 'Adam')}")
+                speak("ElevenLabs voice profile Adam downloaded successfully. Auditioning downloaded sample now.")
+                _time.sleep(0.5)
+                audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
+            else:
+                terminal_feed_log("VOICE", f"Download failed: {msg}")
+                speak(f"Voice download failed. Reason: {msg}")
+        threading.Thread(target=_bg_dl, daemon=True).start()
+        _finish_command()
+        return
+
+    if any(k in query for k in ("audition elevenlabs", "audition eleven labs", "audition adam", "play elevenlabs", "play eleven labs", "play voice sample", "audition voice sample", "play adam voice")):
+        play_sfx("ack")
+        audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
+        _finish_command()
+        return
+
+    if any(k in query for k in ("switch to elevenlabs", "use elevenlabs", "switch to eleven labs", "use eleven labs", "switch to adam voice", "switch to adam", "activate elevenlabs")):
+        play_sfx("switch")
+        hud_config["tts_engine"] = "elevenlabs"
+        save_config()
+        el_key = hud_config.get("elevenlabs_api_key", "").strip()
+        if el_key:
+            terminal_feed_log("VOICE", "ElevenLabs Neural Voice Core Activated.")
+            speak("ElevenLabs neural voice engine activated with voice ID IRHApOXLvnW57QJPQH2P.")
+        else:
+            terminal_feed_log("VOICE", "ElevenLabs Voice Selected (Sample downloaded). API key required for live TTS.")
+            speak("ElevenLabs voice profile Adam is selected. Voice sample is downloaded and ready. To generate dynamic live speech, please add your ElevenLabs API key in the Voice Lab modal. Offline speech will continue using Microsoft David.")
+            _time.sleep(0.5)
+            audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
+        _finish_command()
+        return
+
+    if any(k in query for k in ("switch to sapi", "switch to windows voice", "switch to offline voice", "use sapi", "use offline voice")):
+        play_sfx("switch")
+        hud_config["tts_engine"] = "sapi"
+        save_config()
+        terminal_feed_log("VOICE", "Speech engine shifted to Windows offline SAPI.")
+        speak("Speech engine switched to Windows offline voice.")
         _finish_command()
         return
 
@@ -2148,20 +2398,43 @@ def open_shortcut_editor():
 def open_voice_audio_modal():
     win = tk.Toplevel(root)
     win.title("J.A.R.V.I.S // Voice & Cybernetic Audio Lab")
-    win.geometry("680x620")
+    win.geometry("720x680")
     win.configure(bg="#020710")
     win.transient(root)
     win.grab_set()
 
-    _label(win, "🎙️ VOICE PERSONALITY & CYBERNETIC AUDIO LAB", 12, C["cyan_br"], FN, "bold").pack(pady=(12, 2))
-    _label(win, "Switch synthesis cores (David Male vs Zira Female), adjust tempo, and audition sci-fi sound effects:", 8, C["text_dim"], FN).pack(pady=(0, 8))
+    _label(win, "🎙️ VOICE PERSONALITY & CYBERNETIC AUDIO LAB", 12, C["cyan_br"], FN, "bold").pack(pady=(10, 2))
+    _label(win, "Manage offline SAPI synthesis cores, ElevenLabs neural voice, tempo modulation, and sci-fi audio effects:", 8, C["text_dim"], FN).pack(pady=(0, 6))
 
-    content_box = tk.Frame(win, bg="#020710", padx=14)
-    content_box.pack(fill="both", expand=True)
+    # Scrollable container
+    container = tk.Frame(win, bg="#020710")
+    container.pack(fill="both", expand=True, padx=10, pady=2)
 
-    # 1. SECTION: VOICE PERSONALITY CORES
+    canvas = tk.Canvas(container, bg="#020710", highlightthickness=0)
+    scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
+    content_box = tk.Frame(canvas, bg="#020710")
+
+    content_box.bind(
+        "<Configure>",
+        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+    )
+    canvas_window = canvas.create_window((0, 0), window=content_box, anchor="nw")
+    canvas.bind(
+        "<Configure>",
+        lambda e: canvas.itemconfig(canvas_window, width=e.width)
+    )
+    canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    def _on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    win.bind("<Destroy>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
+    # 1. SECTION: VOICE PERSONALITY CORES (OFFLINE SAPI)
     voice_sec = tk.LabelFrame(
-        content_box, text=" 🎙️ VOICE PROFILES & SYNTHESIS CORES ", font=(FN, 8, "bold"),
+        content_box, text=" 🎙️ OFFLINE VOICE PROFILES (WINDOWS SAPI / PYTTSX3) ", font=(FN, 8, "bold"),
         bg="#040e1a", fg=C["amber"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=8
     )
     voice_sec.pack(fill="x", pady=(0, 8))
@@ -2170,9 +2443,10 @@ def open_voice_audio_modal():
     voice_cards = []
 
     def refresh_voice_cards():
+        tts_mode = hud_config.get("tts_engine", "sapi")
         active_i = hud_config.get("voice_index", 0)
         for i, (cd, bdg, act_btn) in enumerate(voice_cards):
-            is_act = (i == active_i)
+            is_act = (i == active_i and tts_mode == "sapi")
             if is_act:
                 cd.config(highlightbackground=C["cyan_br"], bg="#06182c")
                 bdg.config(text="[ ✓ ACTIVE CURRENT ]", fg=C["cyan_br"])
@@ -2181,6 +2455,16 @@ def open_voice_audio_modal():
                 cd.config(highlightbackground=C["border"], bg="#030b14")
                 bdg.config(text="[ STANDBY ]", fg=C["muted"])
                 act_btn.config(text="▶ SELECT & APPLY", bg=C["panel"], fg=C["text"], state="normal")
+
+        # Update ElevenLabs card button
+        is_el = (tts_mode == "elevenlabs")
+        if "el_tog_btn" in globals_dict:
+            if is_el:
+                globals_dict["el_tog_btn"].config(text="✓ ACTIVE ENGINE", bg=C["border_gl"], fg=C["cyan_br"])
+            else:
+                globals_dict["el_tog_btn"].config(text="▶ SET AS PRIMARY TTS", bg=C["panel"], fg=C["text"])
+
+    globals_dict = {}
 
     for idx, vinfo in enumerate(voices):
         card = tk.Frame(voice_sec, bg="#030b14", highlightbackground=C["border"], highlightthickness=1, padx=8, pady=6)
@@ -2207,6 +2491,7 @@ def open_voice_audio_modal():
 
         def _do_select(i=idx):
             play_sfx("switch")
+            hud_config["tts_engine"] = "sapi"
             switch_voice_profile(i, speak_confirm=True)
             refresh_voice_cards()
 
@@ -2230,9 +2515,149 @@ def open_voice_audio_modal():
 
         voice_cards.append((card, bdg_lbl, act_b))
 
+    # 2. SECTION: ELEVENLABS NEURAL CLOUD VOICE
+    eleven_sec = tk.LabelFrame(
+        content_box, text=" ⚡ ELEVENLABS NEURAL VOICE CORE (CLOUD / HIGH-FIDELITY) ", font=(FN, 8, "bold"),
+        bg="#040e1a", fg=C["cyan_br"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=8
+    )
+    eleven_sec.pack(fill="x", pady=(0, 8))
+
+    el_card = tk.Frame(eleven_sec, bg="#030b14", highlightbackground=C["border"], highlightthickness=1, padx=8, pady=8)
+    el_card.pack(fill="x", pady=2)
+
+    el_head = tk.Frame(el_card, bg="#030b14")
+    el_head.pack(fill="x")
+
+    el_status = get_elevenlabs_voice_status("IRHApOXLvnW57QJPQH2P")
+    _label(el_head, f"◈ {el_status['name']}", 9, C["cyan_br"], FN, "bold").pack(side="left")
+    _label(el_head, " // NEURAL VOICE ID: IRHApOXLvnW57QJPQH2P", 8, C["amber"], FN).pack(side="left", padx=4)
+
+    el_badge = _label(
+        el_head,
+        f"[ ✓ DOWNLOADED & READY ({el_status['size_kb']} KB) ]" if el_status["downloaded"] else "[ ⬇ DOWNLOAD REQUIRED ]",
+        8,
+        C["green"] if el_status["downloaded"] else C["red"],
+        FN, "bold"
+    )
+    el_badge.pack(side="left", padx=6)
+
+    _label(
+        el_card,
+        f"Persona: {el_status['description']} (Accent: {el_status['accent'].capitalize()} | Gender: {el_status['gender'].capitalize()})",
+        7, C["text_dim"], FN
+    ).pack(anchor="w", pady=(2, 6))
+
+    # Control buttons row
+    el_btn_row = tk.Frame(el_card, bg="#030b14")
+    el_btn_row.pack(fill="x", pady=(2, 6))
+
+    def _do_audition_eleven():
+        play_sfx("ack")
+        audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
+
+    def _do_download_eleven():
+        play_sfx("downlink")
+        el_down_btn.config(text="⬇ DOWNLOADING...", state="disabled")
+        win.update()
+        def _bg():
+            succ, meta, path, msg = download_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
+            def _ui():
+                st = get_elevenlabs_voice_status("IRHApOXLvnW57QJPQH2P")
+                if succ:
+                    el_badge.config(text=f"[ ✓ DOWNLOADED ({st['size_kb']} KB) ]", fg=C["green"])
+                    terminal_feed_log("VOICE", f"ElevenLabs voice sample saved ({st['size_kb']} KB).")
+                else:
+                    el_badge.config(text="[ DOWNLOAD ERROR ]", fg=C["red"])
+                    terminal_feed_log("VOICE", f"ElevenLabs download note: {msg}")
+                el_down_btn.config(text="⬇ RE-DOWNLOAD SAMPLE", state="normal")
+            win.after(0, _ui)
+        threading.Thread(target=_bg, daemon=True).start()
+
+    def _toggle_eleven_engine():
+        play_sfx("switch")
+        cur_eng = hud_config.get("tts_engine", "sapi")
+        if cur_eng == "elevenlabs":
+            hud_config["tts_engine"] = "sapi"
+            save_config()
+            refresh_voice_cards()
+            terminal_feed_log("VOICE", "Speech engine switched to Windows SAPI.")
+            speak("Speech engine switched to Windows offline voice.")
+        else:
+            hud_config["tts_engine"] = "elevenlabs"
+            save_config()
+            refresh_voice_cards()
+            terminal_feed_log("VOICE", "Speech engine switched to ElevenLabs Neural.")
+            el_key = hud_config.get("elevenlabs_api_key", "").strip()
+            if not el_key:
+                speak("ElevenLabs voice core selected. Downloaded voice sample is ready. To enable dynamic live speech generation, please enter your ElevenLabs API key.")
+            else:
+                speak("ElevenLabs neural voice core online and active.")
+
+    is_el_active = (hud_config.get("tts_engine", "sapi") == "elevenlabs")
+
+    el_tog_btn = tk.Button(
+        el_btn_row,
+        text="✓ ACTIVE ENGINE" if is_el_active else "▶ SET AS PRIMARY TTS",
+        font=(FN, 7, "bold"),
+        bg=C["border_gl"] if is_el_active else C["panel"],
+        fg=C["cyan_br"] if is_el_active else C["text"],
+        activebackground=C["cyan"], bd=0, padx=8, pady=4, cursor="hand2",
+        command=_toggle_eleven_engine
+    )
+    el_tog_btn.pack(side="left", padx=2)
+    globals_dict["el_tog_btn"] = el_tog_btn
+
+    tk.Button(
+        el_btn_row, text="🔊 AUDITION DOWNLOADED SAMPLE", font=(FN, 7),
+        bg=C["border_gl"], fg=C["text_dim"], activebackground=C["cyan_br"], bd=0, padx=8, pady=4, cursor="hand2",
+        command=_do_audition_eleven
+    ).pack(side="left", padx=2)
+
+    el_down_btn = tk.Button(
+        el_btn_row, text="⬇ RE-DOWNLOAD SAMPLE", font=(FN, 7),
+        bg=C["border_gl"], fg=C["text_dim"], activebackground=C["cyan_br"], bd=0, padx=8, pady=4, cursor="hand2",
+        command=_do_download_eleven
+    )
+    el_down_btn.pack(side="left", padx=2)
+
+    # API Key row for dynamic speech generation
+    api_f = tk.Frame(el_card, bg="#020810", highlightbackground=C["border"], highlightthickness=1, padx=6, pady=4)
+    api_f.pack(fill="x", pady=(4, 2))
+
+    _label(api_f, "🔑 ElevenLabs API Key (Optional for dynamic live speech):", 7, C["text_dim"], FN).pack(side="left", padx=(0, 6))
+
+    key_entry = tk.Entry(api_f, font=(FN, 8), bg="#051525", fg=C["cyan_br"], insertbackground=C["cyan_br"], bd=1, relief="solid", show="*")
+    saved_key = hud_config.get("elevenlabs_api_key", "")
+    if saved_key:
+        key_entry.insert(0, saved_key)
+    key_entry.pack(side="left", fill="x", expand=True, padx=4)
+
+    def _toggle_key_vis():
+        if key_entry.cget("show") == "*":
+            key_entry.config(show="")
+            vis_btn.config(text="HIDE")
+        else:
+            key_entry.config(show="*")
+            vis_btn.config(text="SHOW")
+
+    vis_btn = tk.Button(api_f, text="SHOW", font=(FN, 7), bg=C["panel"], fg=C["text_dim"], bd=0, padx=6, pady=2, cursor="hand2", command=_toggle_key_vis)
+    vis_btn.pack(side="left", padx=2)
+
+    def _save_api_key():
+        play_sfx("ack")
+        k = key_entry.get().strip()
+        hud_config["elevenlabs_api_key"] = k
+        save_config()
+        terminal_feed_log("CONFIG", "ElevenLabs API key updated.")
+        speak("ElevenLabs API key saved successfully.")
+
+    tk.Button(api_f, text="💾 SAVE KEY", font=(FN, 7, "bold"), bg=C["cyan_dim"], fg=C["cyan_br"], bd=0, padx=8, pady=2, cursor="hand2", command=_save_api_key).pack(side="left", padx=2)
+
+    _label(el_card, "* Voice sample is saved locally in voices/ and plays offline. Free API key from elevenlabs.io enables live dynamic TTS.", 7, C["muted"], FN).pack(anchor="w", pady=(2, 0))
+
     refresh_voice_cards()
 
-    # 2. SECTION: SPEECH RATE (TEMPO)
+    # 3. SECTION: SPEECH RATE (TEMPO)
     rate_sec = tk.LabelFrame(
         content_box, text=" ⚡ SPEECH TEMPO & RATE MODULATION ", font=(FN, 8, "bold"),
         bg="#040e1a", fg=C["amber"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=6
@@ -2259,7 +2684,7 @@ def open_voice_audio_modal():
             command=lambda v=r_num: set_rate(v)
         ).pack(side="left", padx=2)
 
-    # 3. SECTION: HOLOGRAPHIC SOUND EFFECTS (SFX) SUITE
+    # 4. SECTION: HOLOGRAPHIC SOUND EFFECTS (SFX) SUITE
     sfx_sec = tk.LabelFrame(
         content_box, text=" 🔊 CYBERNETIC SOUND EFFECTS SUITE (BEST MULTIPLE AUDIOS) ", font=(FN, 8, "bold"),
         bg="#040e1a", fg=C["amber"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=8

@@ -146,3 +146,19 @@ Voice / Text Commands for SFX:
 - "Enable sound effects" / "Enable sfx"   -> Unmutes all cybernetic audio SFX
 - "Disable sound effects" / "Disable sfx" -> Mutes all sound effects
 - Master SFX Switch & Soundboard: Open "[🎙️ VOICE & AUDIO LAB]" to audition every sound!
+
+============================================================
+⚡ ELEVENLABS NEURAL VOICE (ID: IRHApOXLvnW57QJPQH2P - ADAM)
+============================================================
+Jarvis now integrates ElevenLabs Neural TTS alongside offline SAPI:
+- Voice ID: IRHApOXLvnW57QJPQH2P
+- Persona: Adam - American, Dark and Tough (Hero/Action Cybernetic Voice)
+- Offline Sample: voices/elevenlabs_IRHApOXLvnW57QJPQH2P_preview.mp3 (276 KB)
+- Metadata: voices/IRHApOXLvnW57QJPQH2P.json
+
+Voice & Text Commands for ElevenLabs:
+- "Download voice" / "Download elevenlabs voice" -> Fetches latest profile & audio preview
+- "Audition elevenlabs" / "Play voice sample"     -> Auditions downloaded Adam voice audio
+- "Switch to elevenlabs" / "Switch to adam voice"  -> Sets ElevenLabs as primary voice engine
+- "Switch to sapi" / "Switch to offline voice"    -> Switches back to Windows SAPI David/Zira
+- GUI Control & API Key: Open "[🎙️ VOICE & AUDIO LAB]" to enter your XI-API-KEY for live dynamic cloud speech!
