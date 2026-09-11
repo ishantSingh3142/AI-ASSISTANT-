@@ -133,7 +133,7 @@ You can change voices via GUI or VOICE/TEXT commands:
 ============================================================
 🔊 CYBERNETIC SOUND EFFECTS (BEST MULTIPLE AUDIOS)
 ============================================================
-Jarvis now features a procedural suite of 7 high-fidelity 44.1kHz sci-fi audio effects:
+Jarvis now features a suite of 8 high-fidelity cybernetic & tactical audio effects:
 1. Boot Chord (sfx/boot.wav)       -> Iron Man suit cinematic power-up chord on launch
 2. Transmit Chirp (sfx/transmit.wav) -> Digital holographic frequency chirp on command dispatch
 3. Sonar Ping (sfx/sonar.wav)       -> Acoustic microphone capture acoustic sonar ping
@@ -141,8 +141,12 @@ Jarvis now features a procedural suite of 7 high-fidelity 44.1kHz sci-fi audio e
 5. Voice Switch (sfx/switch.wav)   -> Futuristic voice & mode morph sweep
 6. Hardware Ack (sfx/ack.wav)       -> Crisp tactile dual-tone feedback click
 7. Cyber Alert (sfx/alert.wav)      -> Dual-pulse holographic attention alert
+8. Tactical Radio (sfx/tactical_radio.mp3) -> Combat comms: "We have a man down!" (US Military Radio)
 
 Voice / Text Commands for SFX:
+- "Military radio" / "Tactical radio"     -> Plays authentic tactical radio transmission
+- "Man down" / "We have a man down"       -> Triggers combat comms transmission & alert
+- "Red alert" / "Tactical alert"          -> Activates tactical emergency broadcast
 - "Enable sound effects" / "Enable sfx"   -> Unmutes all cybernetic audio SFX
 - "Disable sound effects" / "Disable sfx" -> Mutes all sound effects
 - Master SFX Switch & Soundboard: Open "[🎙️ VOICE & AUDIO LAB]" to audition every sound!

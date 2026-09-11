@@ -392,11 +392,16 @@ def play_sfx(name, force=False):
     if not force and not hud_config.get("sfx_enabled", True):
         return
     try:
-        p = SFX_DIR / f"{name}.wav"
-        if not p.exists():
+        p_wav = SFX_DIR / f"{name}.wav"
+        p_mp3 = SFX_DIR / f"{name}.mp3"
+        if p_wav.exists():
+            winsound.PlaySound(str(p_wav), winsound.SND_FILENAME | winsound.SND_ASYNC)
+        elif p_mp3.exists():
+            play_audio_file(p_mp3, async_play=True)
+        else:
             init_sfx_library()
-        if p.exists():
-            winsound.PlaySound(str(p), winsound.SND_FILENAME | winsound.SND_ASYNC)
+            if p_wav.exists():
+                winsound.PlaySound(str(p_wav), winsound.SND_FILENAME | winsound.SND_ASYNC)
     except Exception as e:
         print(f"SFX error ({name}):", e)
 
@@ -1591,6 +1596,21 @@ def execute_command_thread(raw_query):
         save_config()
         terminal_feed_log("VOICE", "Speech engine shifted to Windows offline SAPI.")
         speak("Speech engine switched to Windows offline voice.")
+        _finish_command()
+        return
+
+    # Tactical Military Radio & Emergency Alerts
+    if any(k in query for k in (
+        "military radio", "tactical radio", "man down", "we have a man down",
+        "radio comms", "tactical comms", "combat comms", "emergency radio",
+        "red alert", "tactical alert", "combat alert"
+    )):
+        play_sfx("tactical_radio", force=True)
+        terminal_feed_log("COMMS", "TACTICAL COMBAT COMMS: 'We have a man down!' (US Military Radio)")
+        trigger_ripple()
+        _safe_ui_update(lambda: set_status("⚠️  TACTICAL COMBAT COMMS ACTIVE", C.get("amber", "#ffaa00")))
+        _time.sleep(1.8)
+        speak("Tactical military radio transmission received. Emergency alert broadcast acknowledged, sir.")
         _finish_command()
         return
 
@@ -2806,8 +2826,9 @@ def open_voice_audio_modal():
         ("sonar",    "3. SONAR PING",      "Submarine microphone acoustic capture ping"),
         ("downlink", "4. DATA DOWNLINK",   "Harmonic 4-note telemetry decrypted chime"),
         ("switch",   "5. VOICE SWITCH",    "Futuristic voice & mode morph sweep"),
-        ("ack",      "6. HARDWARE ACK",    "Crisp tactile dual-tone feedback click"),
-        ("alert",    "7. CYBER ALERT",     "Dual-pulse holographic attention alert"),
+        ("ack",            "6. HARDWARE ACK",    "Crisp tactile dual-tone feedback click"),
+        ("alert",          "7. CYBER ALERT",     "Dual-pulse holographic attention alert"),
+        ("tactical_radio", "8. TACTICAL RADIO",  "Combat radio: 'We have a man down!'"),
     ]
 
     for s_idx, (s_code, s_name, s_desc) in enumerate(sfx_list):
