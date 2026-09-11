@@ -596,11 +596,11 @@ def synthesize_elevenlabs_speech(text, voice_id="IRHApOXLvnW57QJPQH2P", api_key=
     if cache_file.exists() and cache_file.stat().st_size > 500:
         return True, str(cache_file), None
 
-    try:
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+    def _call_api(vid):
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{vid}"
         payload = json.dumps({
             "text": text,
-            "model_id": "eleven_monolingual_v1",
+            "model_id": "eleven_turbo_v2_5",
             "voice_settings": {
                 "stability": 0.5,
                 "similarity_boost": 0.75
@@ -616,16 +616,28 @@ def synthesize_elevenlabs_speech(text, voice_id="IRHApOXLvnW57QJPQH2P", api_key=
             },
             method="POST"
         )
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            content = resp.read()
-            temp_cf = CACHE_DIR / f"el_{text_hash[:16]}_{int(_time.time())}.tmp"
-            with open(temp_cf, "wb") as cf:
-                cf.write(content)
-            try:
-                os.replace(temp_cf, cache_file)
-            except Exception:
-                shutil.copyfile(str(temp_cf), str(cache_file))
-                temp_cf.unlink(missing_ok=True)
+        with urllib.request.urlopen(req, timeout=25) as resp:
+            return resp.read()
+
+    try:
+        try:
+            content = _call_api(voice_id)
+        except urllib.error.HTTPError as he:
+            # If community library voice is restricted on free tier (HTTP 402), fallback to built-in Adam
+            if he.code == 402 and voice_id == "IRHApOXLvnW57QJPQH2P":
+                terminal_feed_log("TTS", "Library voice requires subscription; generating via official Adam neural core.")
+                content = _call_api("pNInz6obpgDQGcFmaJgB")
+            else:
+                raise
+
+        temp_cf = CACHE_DIR / f"el_{text_hash[:16]}_{int(_time.time())}.tmp"
+        with open(temp_cf, "wb") as cf:
+            cf.write(content)
+        try:
+            os.replace(temp_cf, cache_file)
+        except Exception:
+            shutil.copyfile(str(temp_cf), str(cache_file))
+            temp_cf.unlink(missing_ok=True)
         return True, str(cache_file), None
     except Exception as ex:
         return False, None, str(ex)
@@ -3240,14 +3252,18 @@ def boot_sequence():
         ftr_status.config(text="▸  READY FOR TRANSMISSION")
         trigger_ripple()
         trigger_ripple()
-        voices = get_available_voices()
-        cur_idx = hud_config.get("voice_index", 0)
-        vinfo = voices[cur_idx] if cur_idx < len(voices) else voices[0]
-        welcome_msg = (
-            "F.R.I.D.A.Y neural core online. All workstation systems ready, sir."
-            if vinfo.get("is_female") else
-            "J.A.R.V.I.S online. All holographic telemetry systems operational, sir."
-        )
+        tts_mode = hud_config.get("tts_engine", "sapi")
+        if tts_mode == "elevenlabs":
+            welcome_msg = "Adam ElevenLabs neural voice core online. All holographic workstation systems ready, sir."
+        else:
+            voices = get_available_voices()
+            cur_idx = hud_config.get("voice_index", 0)
+            vinfo = voices[cur_idx] if cur_idx < len(voices) else voices[0]
+            welcome_msg = (
+                "F.R.I.D.A.Y neural core online. All workstation systems ready, sir."
+                if vinfo.get("is_female") else
+                "J.A.R.V.I.S online. All holographic telemetry systems operational, sir."
+            )
         terminal_feed_log("SYSTEM", welcome_msg)
         speak(welcome_msg)
 
