@@ -1170,6 +1170,140 @@ def search_internet_data(query):
     }
 
 
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║  UNIVERSAL WEB NAVIGATION & INTERNET RESOLUTION ENGINE           ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+KNOWN_PLATFORMS = {
+    "google": "https://www.google.com/",
+    "youtube": "https://www.youtube.com/",
+    "github": "https://github.com/",
+    "amazon": "https://www.amazon.com/",
+    "flipkart": "https://www.flipkart.com/",
+    "reddit": "https://www.reddit.com/",
+    "netflix": "https://www.netflix.com/",
+    "chatgpt": "https://chatgpt.com/",
+    "openai": "https://openai.com/",
+    "spotify": "https://open.spotify.com/",
+    "twitter": "https://twitter.com/",
+    "x": "https://x.com/",
+    "instagram": "https://www.instagram.com/",
+    "facebook": "https://www.facebook.com/",
+    "linkedin": "https://www.linkedin.com/",
+    "wikipedia": "https://www.wikipedia.org/",
+    "gmail": "https://mail.google.com/",
+    "whatsapp": "https://web.whatsapp.com/",
+    "stackoverflow": "https://stackoverflow.com/",
+    "stack overflow": "https://stackoverflow.com/",
+    "cricbuzz": "https://www.cricbuzz.com/",
+    "twitch": "https://www.twitch.tv/",
+    "discord": "https://discord.com/app",
+    "pinterest": "https://www.pinterest.com/",
+    "medium": "https://medium.com/",
+    "canva": "https://www.canva.com/",
+    "imdb": "https://www.imdb.com/",
+    "quora": "https://www.quora.com/",
+    "swiggy": "https://www.swiggy.com/",
+    "zomato": "https://www.zomato.com/",
+    "coursera": "https://www.coursera.org/",
+    "udemy": "https://www.udemy.com/",
+    "geeksforgeeks": "https://www.geeksforgeeks.org/",
+    "hackerrank": "https://www.hackerrank.com/",
+    "leetcode": "https://leetcode.com/",
+    "tradingview": "https://www.tradingview.com/",
+    "moneycontrol": "https://www.moneycontrol.com/",
+    "hotstar": "https://www.hotstar.com/",
+    "jiocinema": "https://www.jiocinema.com/",
+    "telegram": "https://web.telegram.org/",
+    "yahoo": "https://www.yahoo.com/",
+    "bing": "https://www.bing.com/",
+    "duckduckgo": "https://duckduckgo.com/",
+    "apple": "https://www.apple.com/",
+    "microsoft": "https://www.microsoft.com/",
+}
+
+def _launch_browser_website(display_name, url):
+    """Logs telemetry, sets HUD status, speaks confirmation, and launches browser."""
+    play_sfx("downlink")
+    terminal_feed_log("WEB", f"Opening {display_name} ⟫ {url}")
+    _safe_ui_update(lambda: set_status(f"🌐  OPENING {display_name.upper()}...", C.get("cyan_br", "#40ffff")))
+    speak(f"Opening {display_name}, sir.")
+    webbrowser.open(url)
+
+def resolve_and_open_website(raw_query):
+    """
+    Extracts the target website from the user command, resolves the canonical URL
+    via instant platform mappings or live internet search, and opens it in the browser.
+    """
+    target = raw_query.strip().lower()
+    # Remove leading action verbs
+    target = re.sub(
+        r"^(?:open|launch|go to|navigate to|browse to|browse|visit|connect to|access)\s+",
+        "", target
+    ).strip()
+    # Remove descriptor noise words
+    target = re.sub(r"^(?:the\s+website\s+of|website\s+of|the\s+site\s+of|site\s+of|the\s+official\s+website\s+of|the\s+official\s+site\s+of|the\s+portal\s+of|website|site|webpage|page)\s+", "", target).strip()
+    target = re.sub(r"\s+(?:website|site|webpage|page|portal|homepage)$", "", target).strip()
+
+    if not target:
+        return False, "Target website name could not be identified."
+
+    # 1. Direct URL check
+    if re.match(r"^(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?:\/.*)?$", target):
+        url = target if target.startswith("http") else "https://" + target
+        display_name = target.replace("https://", "").replace("http://", "").split("/")[0]
+        _launch_browser_website(display_name.title(), url)
+        return True, f"Opening {display_name}."
+
+    # 2. Known popular platforms dictionary (instant zero-latency open)
+    clean_key = target.replace(" ", "")
+    if target in KNOWN_PLATFORMS:
+        _launch_browser_website(target.title(), KNOWN_PLATFORMS[target])
+        return True, f"Opening {target.title()}."
+    if clean_key in KNOWN_PLATFORMS:
+        _launch_browser_website(target.title(), KNOWN_PLATFORMS[clean_key])
+        return True, f"Opening {target.title()}."
+
+    # 3. Live Internet Query via DuckDuckGo to extract official canonical URL
+    terminal_feed_log("WEB", f"Querying Internet for official website: '{target}'...")
+    try:
+        query_str = urllib.parse.quote_plus(f"{target} official website")
+        ddg_url = f"https://html.duckduckgo.com/html/?q={query_str}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
+        req = urllib.request.Request(ddg_url, headers=headers)
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            html = resp.read().decode("utf-8", errors="ignore")
+
+        # Extract redirect links
+        links = re.findall(r'href=["\']/l/\?uddg=([^"\'&]+)', html)
+        for link in links:
+            decoded = urllib.parse.unquote(link)
+            if decoded.startswith("http") and not any(skip in decoded for skip in ["duckduckgo.com", "google.com", "bing.com", "yahoo.com"]):
+                _launch_browser_website(target.title(), decoded)
+                return True, f"Opening {target.title()}."
+
+        # Fallback to result__url pattern
+        raw_urls = re.findall(r'class=["\']result__url["\'][^>]*>([^<]+)<', html)
+        for ru in raw_urls:
+            clean_u = ru.strip().replace(" ", "")
+            if clean_u:
+                final_u = clean_u if clean_u.startswith("http") else "https://" + clean_u
+                _launch_browser_website(target.title(), final_u)
+                return True, f"Opening {target.title()}."
+    except Exception as e:
+        print(f"Web resolution note for '{target}':", e)
+
+    # 4. Canonical Domain Guess or Google Search
+    if " " not in target:
+        fallback_url = f"https://www.{target}.com"
+    else:
+        fallback_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(target)}"
+
+    _launch_browser_website(target.title(), fallback_url)
+    return True, f"Opening {target.title()}."
+
 
 # ╔══════════════════════════════════════════════════════════════════╗
 # ║  HARDWARE CONTROLS                                               ║
@@ -1651,25 +1785,21 @@ def execute_command_thread(raw_query):
         _finish_command()
         return
 
-    # Direct Web Navigation
-    if query in ("open google", "launch google"):
-        terminal_feed_log("WEB", "Opening Google.")
-        speak("Opening Google.")
-        webbrowser.open("https://www.google.com/")
-        _finish_command()
-        return
-    if query in ("open youtube", "launch youtube"):
-        terminal_feed_log("WEB", "Opening YouTube.")
-        speak("Opening YouTube.")
-        webbrowser.open("https://www.youtube.com/")
-        _finish_command()
-        return
-    if query in ("open wikipedia", "launch wikipedia"):
-        terminal_feed_log("WEB", "Opening Wikipedia.")
-        speak("Opening Wikipedia.")
-        webbrowser.open("https://www.wikipedia.org/")
-        _finish_command()
-        return
+    # Universal Internet Web Navigation Engine
+    if (
+        any(query.startswith(pfx) for pfx in ("open ", "launch ", "go to ", "navigate to ", "browse to ", "browse ", "visit ", "access "))
+        or re.search(r"\b(?:open|launch|go to|navigate to|browse to|browse|visit|access)\s+(?:the\s+)?(?:website|site|portal)\b", query)
+        or re.search(r"^(?:https?:\/\/)?(?:[a-zA-Z0-9-]+\.)+(?:com|org|net|io|in|edu|gov|ai|co|tv|app|dev|me)(?:\/.*)?$", query)
+    ):
+        # Exclude commands handled specifically elsewhere (e.g. modals, youtube autoplay)
+        if not any(ex in query for ex in (
+            "voice lab", "audio lab", "voice settings", "audio settings",
+            "open youtube and play", "and play on youtube", "play on youtube"
+        )):
+            succ, msg = resolve_and_open_website(query)
+            if succ:
+                _finish_command()
+                return
 
     # Chronometer / Time Query (12-Hour Format)
     if any(k in query for k in ("what is the time", "what's the time", "whats the time", "tell me the time", "what time is it", "current time")) or query == "time":

@@ -91,11 +91,29 @@ You can SPEAK or TYPE:
 - Terminal timestamps                    -> All logs formatted in 12-hour AM/PM
 
 ============================================================
-🌐 WEBSITES & NAVIGATION
+🌐 UNIVERSAL INTERNET WEB NAVIGATION (ANY WEBSITE!)
 ============================================================
-- "Open Google"                      -> Launches Google homepage
-- "Open YouTube"                     -> Launches YouTube homepage
-- "Open Wikipedia"                   -> Launches Wikipedia homepage
+Jarvis now goes through the Internet and opens ANY website requested via speech or typing!
+- Instant Platform Mappings: Google, YouTube, GitHub, Amazon, Flipkart,
+  Netflix, ChatGPT, Reddit, Spotify, Twitter/X, Instagram, LinkedIn,
+  StackOverflow, Cricbuzz, Twitch, Discord, Swiggy, Zomato, Coursera,
+  Udemy, GeeksforGeeks, LeetCode, TradingView, Moneycontrol, etc.
+- Live Internet Resolution: For any other website or portal, Jarvis queries
+  the web in real-time, discovers the canonical official link, announces
+  confirmation, logs telemetry, and launches it directly in your browser!
+
+You can SPEAK or TYPE:
+- "Open Amazon" / "Open Flipkart"        -> Launches e-commerce portals
+- "Open GitHub"                          -> Launches GitHub developer platform
+- "Open Netflix"                         -> Launches Netflix streaming
+- "Open ChatGPT"                         -> Launches OpenAI ChatGPT
+- "Open Cricbuzz"                        -> Launches live cricket scores
+- "Open GeeksforGeeks" / "Open LeetCode" -> Launches coding platforms
+- "Open Coursera" / "Open Udemy"         -> Launches learning portals
+- "Go to Reddit" / "Visit Spotify"       -> Direct platform navigation
+- "Open website of Swiggy"               -> Resolves official portal and launches
+- "Open leetcode.com" / "Open any.org"   -> Direct domain navigation
+- "Open <any website name>"              -> Queries the Internet & opens official site!
 
 ============================================================
 💡 HARDWARE: BRIGHTNESS
