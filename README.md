@@ -2,10 +2,9 @@
 
 A Python-based personal voice assistant that allows users to interact with their laptop using voice commands.
 
-
 ---
 
-# 📛 **Badges**
+## 📛 **Badges**
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
 ![Flask](https://img.shields.io/badge/Flask-Web%20Framework-red)
@@ -24,19 +23,21 @@ The project combines Speech Recognition, Text-to-Speech, Web Automation, Wikiped
 
 The goal of this project is to demonstrate how Python can be used to build an interactive voice-controlled desktop assistant.
 
-1. ✨ Features
-2. 🎙️ Voice command recognition
-3. 🗣️ Text-to-Speech response
-4. 🔎 Google search using voice commands
-5. ▶️ YouTube video search using voice commands
-6. 📖 Wikipedia article search and summary
-7. 💡 Laptop brightness control
-8. 🔊 Laptop volume control
-9. 🌐 Open Google, YouTube, and Wikipedia
-10. 🖥️ Simple Tkinter graphical user interface
-11. ⚡ Voice-based interaction
+### ✨ Features & Capabilities (v3.8)
 
-    
+1. 🎙️ **Voice Command Recognition & Ingestion**: High-accuracy speech capture via Google Speech Recognition with ambient noise adaptation and acoustic sonar ping feedback.
+2. 🗣️ **Complete Text-to-Speech Narration**: Native Windows SAPI COM engine reads all generated results in full with sentence chunking and natural symbol expansion.
+3. 🎭 **Voice-Over Personality Switcher**: Switch dynamically between J.A.R.V.I.S (David - Tactical Male) and F.R.I.D.A.Y (Zira - Neural Female) or any installed system voices.
+4. 🔊 **Procedural Cybernetic Audio SFX Suite**: 7 built-in 44.1kHz sci-fi audio effects (Boot Chord, Transmit Chirp, Sonar Ping, Data Downlink, Voice Switch, Hardware Ack, Cyber Alert) running asynchronously.
+5. 🎛️ **Voice & Audio Lab Modal**: Interactive dialog with selectable voice cards, live audition buttons, tempo sliders, and a soundboard.
+6. 🌤️ **Meteorological Satellite Telemetry**: Real-time atmospheric reports via wttr.in with India as default location.
+7. 📰 **Live Global News RSS Dispatches**: Top breaking headlines across World, Technology, Business, and Sports.
+8. 🎬 **Smart YouTube Direct Autoplay**: Automated background video ID discovery and browser dispatch with direct autoplay.
+9. ⏰ **12-Hour Chronometer & Telemetry**: Full date and time formatted in standard 12-hour AM/PM notation.
+10. 💡 **Workstation Hardware Automation**: Instant display brightness modulation and system master volume control.
+11. 🖥️ **Holographic 3-Panel HUD**: Animated Arc Reactor, audio waveform, live terminal feed, and matrix data rain.
+12. 📑 **Formal IEEE 830 Specification**: Full engineering documentation available in [`SRS.md`](SRS.md).
+
 <details> <summary><strong>🛠️ Setup Guide — Programming Software & IDE</strong></summary>
 1. Install Python
 
@@ -51,7 +52,6 @@ https://www.python.org/downloads/
 During installation on Windows, make sure to check:
 
 ☑ Add Python to PATH
-
 
 After installation, open Command Prompt or Terminal and verify:
 
@@ -71,7 +71,7 @@ If python does not work, try:
 py --version
 ```
 
-2. Choose an IDE / Code Editor
+1. Choose an IDE / Code Editor
 
 You can use any Python-compatible IDE or editor.
 
@@ -109,12 +109,13 @@ For beginners, VS Code is recommended.
 
 Before running the project, install the following Python packages:
 
-### Package	Purpose
-SpeechRecognition	Converts voice into text
-PyAudio	Provides microphone access
-pyttsx3	Converts text into speech
-requests	Communicates with the Wikipedia API
-screen-brightness-control	Controls laptop brightness
+### Package Purpose
+
+SpeechRecognition Converts voice into text
+PyAudio Provides microphone access
+pyttsx3 Converts text into speech
+requests Communicates with the Wikipedia API
+screen-brightness-control Controls laptop brightness
 
 The project also uses Python's built-in libraries such as:
 
@@ -123,7 +124,6 @@ webbrowser
 ctypes
 urllib
 re
-
 
 These do not normally require separate installation.
 
@@ -181,7 +181,6 @@ pyttsx3
 requests
 screen-brightness-control
 
-
 You can also test individual imports:
 
 python -c "import speech_recognition"
@@ -191,7 +190,6 @@ python -c "import pyttsx3"
 python -c "import requests"
 
 python -c "import screen_brightness_control"
-
 
 If the command returns without an error, the package is installed correctly.
 
@@ -223,7 +221,6 @@ Open Terminal / Command Prompt and run:
 git clone https://github.com/alok-kumar8765/jarvis-ai-voice-assistant.git
 ```
 
-
 Move into the project folder:
 
 cd jarvis-ai-voice-assistant
@@ -242,7 +239,7 @@ Open the folder in VS Code, PyCharm, or another Python IDE.
 
 The main Python file should look similar to:
 
-```
+```text
 jarvis-ai-voice-assistant/
 │
 ├── jarvis.py
@@ -263,7 +260,6 @@ If you use Windows and python does not work:
 
 py jarvis.py
 
-
 The JARVIS AI graphical interface should appear.
 
 Step 5 — Allow Microphone Access
@@ -272,13 +268,12 @@ When you click:
 
 🎙️ Tap to Speak
 
-
 allow your computer to use the microphone if Windows asks for permission.
 
 </details>
 <details> <summary><strong>1️⃣ What Is This Project About?</strong></summary>
 
-### JARVIS AI Voice Assistant is a desktop application created using Python.
+### JARVIS AI Voice Assistant is a desktop application created using Python
 
   It allows users to perform different tasks through voice commands instead of manually typing or navigating through applications.
 
@@ -373,7 +368,6 @@ Wikipedia Mahatma Gandhi
 
 Wikipedia Artificial Intelligence
 
-
 JARVIS retrieves the Wikipedia summary and reads it aloud.
 
 💡 Brightness
@@ -462,9 +456,8 @@ JARVIS AI Interface
 <img src="banner.jpg" alt="Jarvis Banner" width="100%" height="300">
 
 Connect With Me
-> GitHub: https://github.com/alok-kumar8765
-Email: alokkaushal42@gmail.com
-
+> GitHub: <https://github.com/alok-kumar8765>
+Email: <alokkaushal42@gmail.com>
 
 🙏 Thank You
 

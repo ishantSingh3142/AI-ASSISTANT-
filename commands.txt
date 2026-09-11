@@ -1,62 +1,148 @@
-Suggestes order for testing:
+Suggested order for testing:
 
-1- Open Google
-2- Open YouTube
-3- Open Wikipedia
-4- Search Google Python
-5- Wikipedia Albert Einstein
-6- Play Arijit Singh on YouTube
-7- Increase brightness
-8- Decrease brightness
-9- Volume up
-10- Volume down
+1- What is the weather today
+2- Weather in London
+3- Latest news headlines
+4- Latest tech news
+5- Play Believer on YouTube (Direct Autoplay!)
+6- Open YouTube and play Tum Hi Ho
+7- Who is Elon Musk
+8- What is quantum computing
+9- Increase brightness
+10- Volume up
 
-Basic commands
-🌐 Websites
-“Open Google” → Google open hoga.
-“Open YouTube” → YouTube open hoga.
-“Open Wikipedia” → Wikipedia open hoga.
-🔎 Google Search
-Aap bolo:
+============================================================
+🌤️ LIVE METEOROLOGICAL TELEMETRY (wttr.in Satellite Uplink)
+============================================================
+Jarvis connects to global atmospheric orbital satellites, prints full
+weather data on the HUD terminal, and speaks the weather forecast aloud!
 
-“Search Google Python programming”
-“Google search latest technology”
-“Search Google how to learn Python”
-Ya simply:
+You can SPEAK (click "START LISTENING") or TYPE in the search bar:
+- "What is the weather today"        -> Reports weather for default location (India)!
+- "What is the weather"              -> Weather for default location (India)
+- "Set default location to Delhi"    -> Changes your saved default location
+- "Set location to Mumbai"           -> Changes saved default location to Mumbai
+- "Weather in London"                -> Weather report for London, UK
+- "Weather in Tokyo"                 -> Weather report for Tokyo, Japan
+- "Temperature in Paris"             -> Paris temperature & humidity
+- "Climate in New York"              -> New York weather telemetry
+- "Delhi weather"                    -> Delhi temperature & conditions
+- "Weather forecast for Sydney"      -> Sydney orbital report
 
-“Python programming”
-To Jarvis usko Google par search karega.
+============================================================
+📰 LIVE NEWS FEED DISPATCHES (Google News Satellite RSS)
+============================================================
+Jarvis fetches breaking global and category headlines, displays a numbered
+feed with news sources on the typewriter terminal, and speaks the top headlines!
 
-▶️ YouTube
-Aap bolo:
+You can SPEAK or TYPE:
+- "What is the news"                 -> Top breaking national/global headlines
+- "Latest news"                      -> Top breaking news feed
+- "Headlines"                        -> Top headlines
+- "Latest tech news"                 -> Technology, AI & gadget dispatches
+- "Business news"                    -> Financial & market headlines
+- "Sports news"                      -> Live sports telemetry
+- "World news"                       -> Global international dispatches
+- "News about ISRO"                  -> Specific news dispatches on ISRO
+- "News about AI"                    -> Specific news dispatches on AI
 
-“Play Arijit Singh on YouTube”
-“Play Tum Hi Ho on YouTube”
-“Play Python tutorial on YouTube”
-“Search YouTube funny videos”
-“Play cricket highlights on YouTube”  
+============================================================
+🎬 SMART YOUTUBE DIRECT AUTOPLAY (Exact Match Instant Play)
+============================================================
+Jarvis searches YouTube in the background, extracts the exact video stream ID,
+and launches direct video playback in your browser with automatic playback!
 
-## exact video automatically play improvement need.
+You can SPEAK or TYPE:
+- "Play Believer on YouTube"         -> Plays Imagine Dragons - Believer
+- "Play Tum Hi Ho on YouTube"        -> Plays Arijit Singh - Tum Hi Ho
+- "Open YouTube and play Shape of You" -> Plays Ed Sheeran - Shape of You
+- "Play Starboy"                     -> Plays The Weeknd - Starboy
+- "Play relaxing lofi on YouTube"    -> Plays Lofi Chill Beats
+- "YouTube play Interstellar theme"  -> Plays Interstellar OST
+- "Play song Faded"                  -> Plays Alan Walker - Faded
 
-📖 Wikipedia
-Aap bolo:
+============================================================
+🤖 AI PERSONAL ASSISTANT & WEB INTELLIGENCE SEARCH
+============================================================
+Jarvis determines if external Internet information is needed:
+- Conversational queries are answered instantly by the neural core.
+- Factual & current queries search DuckDuckGo, Wikipedia, and live
+  organic web snippets, synthesize the answer, and speak it aloud!
+- If verified data cannot be found, Jarvis truthfully says so (0 guessing).
 
-“Wikipedia Albert Einstein”
-“Wikipedia Mahatma Gandhi”
-“Wikipedia India”
-“Wikipedia computer”
-“Wikipedia artificial intelligence”
-Jarvis Wikipedia se summary lekar screen par show karega aur bolkar bhi sunayega.
+You can SPEAK or TYPE:
+- "Hello Jarvis"                     -> Natural AI greeting
+- "Who are you"                      -> Assistant persona & capabilities
+- "How are you"                      -> System telemetry check
+- "What can you do"                  -> Overview of features
+- "Who is the CEO of Microsoft"      -> Live web intelligence search
+- "Who is Elon Musk"                 -> Official executive archive
+- "What is quantum computing"        -> Scientific explanation
+- "What is photosynthesis"           -> Biological process summary
+- "Tell me about black holes"        -> Astrophysics intelligence
+- "Explain machine learning"         -> AI/ML definition & concepts
 
-💡 Brightness
-“Increase brightness” → 10% brightness increase
-“Decrease brightness” → 10% brightness decrease
-“Brightness up”
-“Brightness down”
-“Set brightness 50” → 50% brightness
-🔊 Volume
-“Volume up” → volume increase
-“Increase volume”
-“Volume down” → volume decrease
-“Decrease volume”
-“Mute volume” → mute
+============================================================
+⏰ CHRONOMETER & TIME (12-HOUR AM/PM FORMAT)
+============================================================
+- "What is the time" / "What's the time" -> Speaks current time (e.g., "08:52 PM")
+- "Tell me the time" / "What time is it" -> Logs full date & 12-hour time
+- Top-Right Digital Clock on HUD         -> Live 12-hour time with AM/PM
+- Terminal timestamps                    -> All logs formatted in 12-hour AM/PM
+
+============================================================
+🌐 WEBSITES & NAVIGATION
+============================================================
+- "Open Google"                      -> Launches Google homepage
+- "Open YouTube"                     -> Launches YouTube homepage
+- "Open Wikipedia"                   -> Launches Wikipedia homepage
+
+============================================================
+💡 HARDWARE: BRIGHTNESS
+============================================================
+- "Increase brightness" / "Brightness up" -> +10% display brightness
+- "Decrease brightness" / "Brightness down" -> -10% display brightness
+- "Set brightness 70"                -> Sets display brightness to 70%
+
+============================================================
+🔊 HARDWARE: VOLUME
+============================================================
+- "Volume up" / "Increase volume"    -> +10% Windows volume
+- "Volume down" / "Decrease volume"  -> -10% Windows volume
+- "Mute volume" / "Mute"             -> Mutes system audio output
+
+============================================================
+🎙️ VOICE OVER PERSONALITY SWITCHING (J.A.R.V.I.S / F.R.I.D.A.Y)
+============================================================
+You can switch the assistant's voice personality dynamically between:
+- J.A.R.V.I.S Tactical Core (Microsoft David - Male)
+- F.R.I.D.A.Y Neural Core (Microsoft Zira - Female)
+- Any other installed Windows speech voices!
+
+You can change voices via GUI or VOICE/TEXT commands:
+- "Change voice" / "Switch voice"         -> Toggles between David and Zira
+- "Switch to female voice" / "Female voice" -> Shifts persona to F.R.I.D.A.Y (Female)
+- "Switch to male voice" / "Male voice"   -> Shifts persona to J.A.R.V.I.S (Male)
+- "Switch to Friday" / "Voice Friday"     -> Activates F.R.I.D.A.Y neural core
+- "Switch to Jarvis" / "Voice Jarvis"     -> Activates J.A.R.V.I.S tactical core
+- "Switch to Zira" / "Switch to David"    -> Direct SAPI voice target selection
+- "Preview voice" / "Test voice"          -> Auditions active voice synthesis core
+- "Open Voice Lab" / "Voice Settings"     -> Opens the glassmorphic Voice & Audio Lab modal
+- HUD Toolbar Button: Click "[🎙️ VOICE & AUDIO LAB]" on the top header bar!
+
+============================================================
+🔊 CYBERNETIC SOUND EFFECTS (BEST MULTIPLE AUDIOS)
+============================================================
+Jarvis now features a procedural suite of 7 high-fidelity 44.1kHz sci-fi audio effects:
+1. Boot Chord (sfx/boot.wav)       -> Iron Man suit cinematic power-up chord on launch
+2. Transmit Chirp (sfx/transmit.wav) -> Digital holographic frequency chirp on command dispatch
+3. Sonar Ping (sfx/sonar.wav)       -> Acoustic microphone capture acoustic sonar ping
+4. Data Downlink (sfx/downlink.wav) -> Harmonic 4-note telemetry decrypted chime
+5. Voice Switch (sfx/switch.wav)   -> Futuristic voice & mode morph sweep
+6. Hardware Ack (sfx/ack.wav)       -> Crisp tactile dual-tone feedback click
+7. Cyber Alert (sfx/alert.wav)      -> Dual-pulse holographic attention alert
+
+Voice / Text Commands for SFX:
+- "Enable sound effects" / "Enable sfx"   -> Unmutes all cybernetic audio SFX
+- "Disable sound effects" / "Disable sfx" -> Mutes all sound effects
+- Master SFX Switch & Soundboard: Open "[🎙️ VOICE & AUDIO LAB]" to audition every sound!

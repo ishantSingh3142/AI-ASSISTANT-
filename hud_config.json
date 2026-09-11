@@ -1,0 +1,62 @@
+{
+  "theme": "crimson",
+  "default_location": "India",
+  "column_order": [
+    "lp",
+    "cp",
+    "rp"
+  ],
+  "center_order": [
+    "term",
+    "wave",
+    "quick",
+    "hardware"
+  ],
+  "voice_rate": 175,
+  "voice_index": 1,
+  "voice_name": "Microsoft Zira Desktop - English (United States)",
+  "sfx_enabled": true,
+  "visible": {
+    "lp": true,
+    "cp": true,
+    "rp": true,
+    "term": true,
+    "wave": true,
+    "quick": true,
+    "hardware": true,
+    "rain": true,
+    "metrics": true
+  },
+  "quick_cmds": [
+    [
+      "\u27eb Live Weather",
+      "what is the weather today",
+      "METEO"
+    ],
+    [
+      "\u27eb Breaking News",
+      "latest news headlines",
+      "GLOBAL NEWS"
+    ],
+    [
+      "\u27eb Autoplay Believer",
+      "play Believer on YouTube",
+      "MEDIA DISPATCH"
+    ],
+    [
+      "\u27eb Tech Intelligence",
+      "latest technology news",
+      "TECH INTEL"
+    ],
+    [
+      "\u27eb Who is Elon Musk",
+      "Who is Elon Musk",
+      "WIKI INTEL"
+    ],
+    [
+      "\u27eb System Volume Boost",
+      "volume up",
+      "HARDWARE"
+    ]
+  ]
+}
