@@ -218,4 +218,7 @@ __marimo__/
 .streamlit/secrets.toml
 oracleJdk-26/
 *.wav
+cache/
+*.tmp
+*.old
 
