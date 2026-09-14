@@ -34,7 +34,7 @@
    - 4.2 [Dual-Engine Text-to-Speech (TTS) & Voice Switching](#42-dual-engine-text-to-speech-tts--voice-switching)
    - 4.3 [Procedural Cybernetic Audio Effects (SFX) Engine](#43-procedural-cybernetic-audio-effects-sfx-engine)
    - 4.4 [Web Intelligence & Verified Search Retrieval](#44-web-intelligence--verified-search-retrieval)
-   - 4.5 [Direct YouTube Media Autoplay](#45-direct-youtube-media-autoplay)
+   - 4.5 [Universal YouTube Video Discovery & Direct Playback Engine](#45-universal-youtube-video-discovery--direct-playback-engine)
    - 4.6 [Meteorological Satellite Telemetry (wttr.in)](#46-meteorological-satellite-telemetry-wttrin)
    - 4.7 [Global News RSS Intelligence Feed](#47-global-news-rss-intelligence-feed)
    - 4.8 [Hardware Control (Volume & Display Brightness)](#48-hardware-control-volume--display-brightness)
@@ -43,6 +43,9 @@
    - 4.11 [Customizer Drawer & Modular Layout Reconfiguration](#411-customizer-drawer--modular-layout-reconfiguration)
    - 4.12 [Theme Morpher & Visual Customization](#412-theme-morpher--visual-customization)
    - 4.13 [Persistent Configuration Management](#413-persistent-configuration-management)
+   - 4.14 [Bilingual Hindi and English Language Engine](#414-bilingual-hindi-and-english-language-engine)
+   - 4.15 [Spotify Music Streaming Engine](#415-spotify-music-streaming-engine)
+   - 4.16 [AI Neural Model Engine, Precision Math and Comparative Intelligence](#416-ai-neural-model-engine-precision-math-and-comparative-intelligence)
 5. [Non-Functional Requirements](#5-non-functional-requirements)
    - 5.1 [Performance Requirements](#51-performance-requirements)
    - 5.2 [Reliability & Fault Tolerance](#52-reliability--fault-tolerance)
@@ -159,14 +162,15 @@ graph TD
 - **REQ-UI-001 [High]**: The interface shall render a 3-panel responsive layout:
   - **Left Panel (`lp`)**: Holographic animated Arc Reactor, core diagnostic telemetry, and Voice Capture activation trigger.
   - **Center Panel (`cp`)**: Telemetry terminal, real-time audio waveform canvas, quick access deck, and hardware sliders.
-  - **Right Panel (`rp`)**: Cybernetic matrix data rain canvas and real-time CPU/RAM metric monitors.
+  - **Right Panel (`rp`)**: Interactive, real-time core-reactive cybernetic matrix data system with multi-mode telemetry stream (Core / Neural / Vox / Hex), interactive EMP shockwaves, targeting crosshair hover inspect, speed scaling, and live measured 60 FPS monitor.
 - **REQ-UI-002 [Medium]**: The interface shall provide a **Voice & Audio Lab** modal containing voice selection cards, preview auditioning buttons, rate sliders, and an interactive 7-sound effect soundboard.
 - **REQ-UI-003 [Medium]**: The interface shall support 5 curated sci-fi themes: Cyber Cyan (J.A.R.V.I.S), Matrix Neon (Hacker HUD), Solar Amber (War Machine), Quantum Purple (Nebula), and Crimson Red (Mark 85 Alert).
 - **REQ-UI-004 [High]**: All logs and digital clocks must display timestamps formatted in 12-hour chronometer notation (`hh:mm:ss AM/PM`).
+- **REQ-UI-005 [High]**: **Interactive Real-Time Matrix Data System**: The matrix data stream shall actively react to voice assistant core states in real-time (Neon Green during mic capture, Golden Amber during AI/intent processing, Neon Cyan during speech synthesis), stream live hardware telemetry (CPU, RAM, network) and query tokens, provide interactive mouse hover targeting crosshairs with localized character decryption, support click-triggered expanding EMP shockwaves, and provide on-HUD mode and speed toggles.
 
 ### 3.2 Hardware Interfaces
 
-- **REQ-HW-001 [High]**: **Audio Microphone**: Input captured via `speech_recognition.Microphone()` with automatic ambient noise calibration (0.5s baseline).
+- **REQ-HW-001 [High]**: **Audio Microphone**: Input captured via `speech_recognition.Microphone()` with startup background ambient noise pre-calibration (`_precalibrate_microphone()`) and fast runtime micro-calibration (0.08s).
 - **REQ-HW-002 [High]**: **Audio Output**: Playback rendered through Windows Multimedia endpoint via `winsound.PlaySound` and DirectSound/WASAPI via SAPI.
 - **REQ-HW-003 [High]**: **Display Backlight**: Integrated display brightness modulated via `screen_brightness_control`.
 - **REQ-HW-004 [High]**: **System Audio Mixer**: Master volume adjusted via Windows native keycode simulation (`ctypes.windll.user32.keybd_event`).
@@ -174,7 +178,7 @@ graph TD
 ### 3.3 Software & API Interfaces
 
 - **REQ-SW-001 [High]**: **Windows SAPI (`win32com.client`)**: Primary speech synthesizer using `SAPI.SpVoice` automation token.
-- **REQ-SW-002 [High]**: **Google Speech Recognition Service**: Converts ingested audio buffers into English text (`en-in` dialect).
+- **REQ-SW-002 [High]**: **Google Speech Recognition Service**: Converts ingested audio buffers into text using Indian English (`en-IN`) and Hindi (`hi-IN`) dialects with concurrent multi-dialect resolution.
 - **REQ-SW-003 [High]**: **wttr.in Meteorological Service**: Fetches formatted atmospheric telemetry (`format=j1`) over HTTPS.
 - **REQ-SW-004 [High]**: **Google News RSS Feed**: Fetches real-time XML news dispatches for general, technology, business, and sports topics.
 - **REQ-SW-005 [High]**: **DuckDuckGo Instant Answer API**: Fetches structured encyclopedic abstracts without user tracking.
@@ -193,8 +197,12 @@ graph TD
 
 - **REQ-FR-001 [High]**: The system shall initiate voice capture when the user clicks `START LISTENING` or triggers a voice capture event.
 - **REQ-FR-002 [Medium]**: The system shall play an acoustic sonar ping (`sfx/sonar.wav`) immediately upon opening the microphone channel.
-- **REQ-FR-003 [High]**: If speech is not detected within 5 seconds (`WaitTimeoutError`), the system shall play `sfx/alert.wav` and return to nominal status.
+- **REQ-FR-003 [High]**: If speech is not detected within the configured timeout window (default 10.0 seconds, configurable via Voice Lab or voice directives) (`WaitTimeoutError`), the system shall play `sfx/alert.wav` and report timeout status.
 - **REQ-FR-004 [High]**: If speech pattern is unrecognizable (`UnknownValueError`), the system shall play `sfx/alert.wav` and report "SPEECH PATTERN UNRECOGNIZED".
+- **REQ-FR-053 [High]**: **Intelligent Voice Command Normalizer & Intent Sanitizer**:
+  - The voice intake pipeline shall pass raw recognized speech through `normalize_voice_command()` prior to intent routing and handler execution.
+  - Multi-pass sanitization shall strip conversational padding prefixes (*"please"*, *"can you please tell me"*, *"could you tell me"*, *"would you kindly"*, *"i want you to"*, *"kripya"*, *"kripaya"*, *"zara batao"*, *"कृपया मुझे बताओ"*), stray repeated wake words (*"Hey Jarvis"*, *"Jarvis"*), trailing politeness (*"thank you"*, *"thanks"*, *"dhanyawad"*), and spoken punctuation artifacts (*"question mark"*, *"full stop"*, *"period"*, *"exclamation mark"*).
+  - Sanitized queries shall be propagated directly to downstream computational modules (Math evaluation, Weather telemetry, Spotify, YouTube discovery, Website navigation, System controls) while preserving original spoken transcripts for HUD visual logs.
 
 ### 4.2 Dual-Engine Text-to-Speech (TTS) & Voice Switching
 
@@ -231,11 +239,11 @@ graph TD
 - **REQ-FR-017 [High]**: **Truthfulness Guarantee**: If no verified data is retrieved, the assistant shall truthfully state that verified intelligence is unavailable rather than fabricating information.
 - **REQ-FR-018 [High]**: Every generated search result shall automatically trigger `play_sfx("downlink")`, typewriter display, and complete voice reading.
 
-### 4.5 Direct YouTube Media Autoplay
+### 4.5 Universal YouTube Video Discovery & Direct Playback Engine
 
-- **REQ-FR-019 [High]**: Commands formatted as *"play [song] on youtube"* or *"play [query]"* shall extract the song title.
-- **REQ-FR-020 [High]**: The system shall perform a background scrape of YouTube search results, isolate the exact 11-character video ID, and launch `https://www.youtube.com/watch?v=[ID]` in the default browser.
-- **REQ-FR-021 [Medium]**: If direct video extraction fails, the system shall fall back to the search results page.
+- **REQ-FR-019 [High]**: The system shall process commands requesting any video across YouTube (tutorials, courses, movie clips, documentaries, music, reviews) in English, Hindi, and Hinglish.
+- **REQ-FR-020 [High]**: The system shall parse `ytInitialData` JSON from YouTube search results to extract verified video metadata: exact video title, channel/creator name, duration, and the 11-character video ID.
+- **REQ-FR-021 [High]**: The system shall display rich video intelligence telemetry on the HUD typewriter terminal, speak the video title and creator verbally in the query's language, and launch direct browser video playback at `https://www.youtube.com/watch?v=[ID]`.
 
 ### 4.6 Meteorological Satellite Telemetry (wttr.in)
 
@@ -282,17 +290,71 @@ graph TD
   ```json
   {
     "theme": "cyan",
-    "default_location": "India",
+    "input_language": "auto",
+    "default_location": "Uttar Pradesh, India",
     "column_order": ["lp", "cp", "rp"],
     "center_order": ["term", "wave", "quick", "hardware"],
     "voice_rate": 175,
     "voice_index": 0,
     "voice_name": "Microsoft David Desktop - English (United States)",
+    "tts_engine": "sapi",
+    "wake_word_enabled": true,
     "sfx_enabled": true,
     "visible": { "lp": true, "cp": true, "rp": true },
     "quick_cmds": [ ... ]
   }
   ```
+
+### 4.14 Bilingual Hindi and English Language Engine
+
+- **REQ-FR-040 [High]**: **Multilingual Audio Ingestion**: The system shall support three selectable speech-to-text recognition modes:
+  - `auto`: Concurrently queries Indian English (`en-IN`) and Hindi (`hi-IN`) Google Speech API endpoints via `ThreadPoolExecutor(max_workers=2)` for sub-second dual recognition without language lag.
+  - `hi`: Exclusively recognizes Hindi audio input (`hi-IN`).
+  - `en`: Exclusively recognizes Indian English audio input (`en-IN`).
+- **REQ-FR-041 [High]**: **Devanagari & Hinglish Intent Engine**: The system shall process commands expressed in Devanagari script, Romanized Hinglish, and English across all supported domains:
+  - *Chronometer & Time*: "समय क्या हुआ है", "kitne baje hain", "what is the time".
+  - *Meteorological Telemetry*: "मौसम बताओ", "delhi me mausam kaisa hai", "weather in London".
+  - *Satellite News*: "ताज़ा समाचार", "khabar sunao", "latest news".
+  - *YouTube Autoplay*: "यूट्यूब पर केसरिया गाना चलाओ", "chalao Believer", "play Shape of You on YouTube".
+  - *Universal Web Navigation*: "गूगल खोलो", "यूट्यूब खोलो", "open GitHub".
+  - *Hardware & Audio*: "आवाज बढ़ाओ", "aawaz kam karo", "volume up", "ब्राइटनेस बढ़ाओ".
+  - *Conversational & AI Intelligence*: "नमस्ते", "kaise ho", "tum kaun ho", "who are you".
+  - *Wikipedia Intelligence*: Official Hindi Wikipedia archive search (`hi.wikipedia.org`) with summary extraction.
+- **REQ-FR-043 [High]**: **HUD & Modal Language Controls**: The system shall provide an interactive `[🌐 LANG: DUAL (HI/EN)]` toggle button in the HUD left panel and a dedicated language mode section in the Voice & Audio Lab modal, allowing instant switching between Dual Auto, Hindi Exclusive, and English Exclusive modes.
+
+### 4.15 Spotify Music Streaming Engine
+
+- **REQ-FR-044 [High]**: **Spotify Media Dispatch**: The system shall process commands to stream songs, artists, albums, or playlists on Spotify in English (*"play [song] on spotify"*, *"spotify play [artist]"*) and Hindi/Hinglish (*"स्पॉटिफ़ाई पर [गाना] चलाओ"*, *"spotify par [song] bajao"*).
+- **REQ-FR-045 [High]**: **Dual Desktop & Web Launch**: The system shall trigger the native Windows Spotify desktop application URI (`spotify:search:[query]`), with automatic graceful fallback to the Spotify Web Player (`https://open.spotify.com/search/[query]`).
+- **REQ-FR-046 [High]**: **Telemetry & Verbal Confirmation**: Every Spotify dispatch shall feed a dedicated `SPOTIFY` intelligence telemetry card into the HUD terminal and deliver spoken confirmation in the user's spoken language.
+
+### 4.16 AI Neural Model Engine, Precision Math and Comparative Intelligence
+
+- **REQ-FR-047 [High]**: **Precision Mathematical Engine**: The system shall evaluate arithmetic, percentage, root, power, and algebraic expressions computationally without delegating to generic web search, outputting dedicated calculation telemetry on the HUD and spoken results.
+- **REQ-FR-048 [High]**: **AI Neural Model Core**: The system shall support pluggable AI LLM inference across Groq Cloud (Llama 3.3 70B), Google Gemini (Gemini 2.0 Flash), OpenAI (GPT-4o-mini), and Local Ollama, with automated provider detection and API key persistence in `hud_config.json`.
+- **REQ-FR-049 [High]**: **Multi-Entity Comparative Synthesizer**: The system shall parse dual-entity comparison queries (e.g. *"difference between X and Y"*, *"compare X with Y"*, *"X aur Y me kya antar hai"*), retrieve comprehensive extracts for both subjects, and generate structured side-by-side comparison telemetry.
+- **REQ-FR-050 [High]**: **Deep Encyclopedic Knowledge Retrieval**: The system shall retrieve multi-paragraph lead sections via Wikipedia's `action=query&prop=extracts&explaintext=1&exintro=1` in both English and Hindi, scored by acronym and token intersection to eliminate false matches.
+
+### 4.17 Hands-Free Ambient Wake-Word Engine
+
+- **REQ-FR-051 [High]**: **Ambient Wake-Word Calling & Immediate Voice Command Capture**:
+  - The system shall run a non-blocking background daemon thread (`_wake_word_daemon`) listening for ambient calls of "Jarvis", "Hey Jarvis", "OK Jarvis", "जार्विस", or "सुनो जार्विस" when idle.
+  - When invoked, the assistant shall trigger visual ripple telemetry, set status `◉ WAKE ACTIVATED // YES SIR`, and greet aloud:
+    - In English: *"Yes sir, how do I help you?"*
+    - In Hindi: *"हाँ महोदय, मैं आपकी क्या सहायता कर सकता हूँ?"*
+  - The greeting shall complete synchronously via `speak(greeting, block=True)` in a worker thread to prevent mic self-echo, and immediately launch voice command capture (`run_mic_capture_async()`) hands-free.
+  - Compound utterances (e.g. *"Jarvis what is the weather"*, *"Hey Jarvis play Believer on YouTube"*) shall automatically strip the wake-word prefix and execute immediately.
+  - The system shall provide an interactive HUD toggle button `[ 👂 WAKE: ON (HEY JARVIS) ]` on the left panel and voice commands (*"enable wake word"*, *"disable wake word"*).
+- **REQ-FR-052 [High]**: **Command Preemption & Termination on New Invocation**:
+  - If a command is actively executing (network queries, AI inference, mathematical computation) or actively speaking via TTS:
+  - When the user calls "Jarvis" / "Hey Jarvis" or initiates a new voice or text command, the system shall immediately terminate the previous command via `terminate_previous_command()`.
+  - Termination shall:
+    1. Increment `_current_command_id` inside `_command_lock`, causing any pending worker threads from the previous command to immediately drop their results and abort execution without updating the UI or speaking.
+    2. Instantly halt active audio and TTS output via SAPI COM / pyttsx3 purges (`stop_speaking(flush_queue=True)`).
+    3. Flush all pending typewriter characters from `_stream_queue`.
+    4. Reset processing and speaking animation flags.
+  - The assistant shall execute the new command and deliver full telemetry and spoken output according to the new command.
+  - The system shall also support immediate explicit stop commands (*"stop"*, *"cancel"*, *"terminate"*, *"quiet"*, *"रुको"*, *"चुप रहो"*) to halt all ongoing tasks on demand.
 
 ---
 
@@ -300,10 +362,14 @@ graph TD
 
 ### 5.1 Performance Requirements
 
-- **REQ-NFR-001 [High]**: **UI Responsiveness**: GUI animations (Arc Reactor, Waveform, Data Rain) shall render at a stable ~30 FPS without stutter.
+- **REQ-NFR-001 [High]**: **UI Responsiveness & 60 FPS Engine**: GUI animations (Arc Reactor, Waveform, Data Rain, Background Particles, Border Glow) shall render at a rock-solid, stable ~60 FPS (16.6ms frame target) without stutter or frame drops, achieved through Windows multimedia timer calibration (`timeBeginPeriod(1)`), dynamic millisecond work-interval compensation, and frame-rate-independent delta-time (`dt`) physics.
 - **REQ-NFR-002 [High]**: **Command Dispatch Latency**: Local commands (volume, brightness, time, voice switch) shall execute within < 150 milliseconds.
 - **REQ-NFR-003 [High]**: **Speech Playback Latency**: TTS queue ingestion to audio speaker output shall commence within < 200 milliseconds.
 - **REQ-NFR-004 [Medium]**: **Memory Footprint**: Working set memory shall not exceed 150 MB during continuous operation.
+- **REQ-NFR-013 [High]**: **Acoustic Calibration & Anti-Truncation Voice Capture**: The voice intake pipeline shall employ a calibrated `pause_threshold = 0.65s` to balance rapid turn-around with total protection against premature mid-sentence cutting when pausing between words. Onset speech shall trigger within 150ms (`phrase_threshold = 0.15s`), and trailing consonant phonemes shall be preserved with `non_speaking_duration = 0.35s`. Capture duration parameters shall provide a generous default 10.0-second listening timeout (`voice_input_timeout`) and 20.0-second phrase time limit (`voice_phrase_time_limit`), dynamically adjustable via Voice Lab or voice directives.
+- **REQ-NFR-014 [High]**: **Resilient Multilingual Speech Analysis Race**: In dual bilingual recognition mode (`auto`), the engine shall race Indian English (`en-IN`) and Hindi (`hi-IN`) concurrently via `as_completed(timeout=5.0)`. The pipeline shall catch `concurrent.futures.TimeoutError` gracefully, execute early-exit lexical heuristics upon first valid domain match, and fall back to US English (`en-US`) if regional endpoints yield empty transcripts.
+- **REQ-NFR-015 [High]**: **Instant Local Intent Routing**: Instant computational intents (Precision Math evaluation `< 1ms` and Conversational Dialogue `< 1ms`) shall be resolved at the immediate top of `execute_command_thread()`, bypassing external search and network pipelines for instant user response.
+- **REQ-NFR-016 [High]**: **Far-Field Digital Audio Pre-Amp, DC Centering & Soft-Knee AGC**: The audio pre-processor (`normalize_and_boost_audio()`) shall eliminate microphone DC bias offset (`abs(dc_bias) > 25`), compute true RMS energy driving `_anim["core_audio_level"]` for live UI waveform reactivity, and apply soft-knee dynamic gain (up to 6.5x / +15.5 dB) to normalize soft and distant voices while protecting absolute silence from noise-floor amplification.
 
 ### 5.2 Reliability & Fault Tolerance
 
@@ -342,4 +408,13 @@ graph TD
 | `REQ-FR-029` | 12-Hour Chronometer | Unit Test | Clock and voice output format matches `hh:mm AM/PM` | ✅ Verified |
 | `REQ-FR-031` | Voice & Audio Lab Modal | GUI Test | Modal opens with cards, soundboard, and sliders | ✅ Verified |
 | `REQ-FR-039` | Config File Persistence | File IO Test | Settings saved and reloaded across restarts | ✅ Verified |
+| `REQ-FR-051` | Ambient Wake-Word Activation | Automated Unit & Integration Test | Calling "Jarvis" greets with "Yes sir, how do I help you?" and opens mic | ✅ Verified |
+| `REQ-FR-052` | Command Preemption & Termination | Automated Preemption Test | Calling "Jarvis" or dispatching new command immediately terminates old command | ✅ Verified |
+| `REQ-FR-053` | Intelligent Voice Command Normalizer | Automated Unit & Integration Test | Strips conversational padding, polite prefixes, and spoken punctuation | ✅ Verified |
+| `REQ-UI-005` | Interactive Real-Time Matrix Data System | Automated & Manual GUI Test | Matrix streams core state, CPU/RAM, tokens; supports hover aura & click shockwaves | ✅ Verified |
+| `REQ-NFR-001` | 60 FPS UI Responsiveness Engine | Multimedia Timer & Frame Benchmark | Target 16.6ms frame interval achieved via `timeBeginPeriod(1)` and delta-time loop | ✅ Verified |
 | `REQ-NFR-005` | Thread-Safe UI Isolation | Daemon Worker Test | Zero `RuntimeError` exceptions thrown | ✅ Verified |
+| `REQ-NFR-013` | Acoustic Calibration & Anti-Truncation | Acoustic Benchmark | 10.0s timeout and 650ms pause threshold prevent premature cut-offs while preserving responsiveness | ✅ Verified |
+| `REQ-NFR-014` | Resilient Multilingual Speech Race | Concurrent Race Benchmark | as_completed race with 5.0s timeout and en-US tertiary fallback prevents hangs | ✅ Verified |
+| `REQ-NFR-015` | Instant Local Intent Routing | Automated Latency Test | Math and dialogue queries resolved in <1ms without network calls | ✅ Verified |
+| `REQ-NFR-016` | Far-Field Pre-Amp & DC Centering | Digital DSP & Gain Benchmark | DC offset removed, RMS tracks audio level, soft-knee gain boosts quiet voice up to 6.5x | ✅ Verified |

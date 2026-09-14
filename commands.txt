@@ -1,5 +1,6 @@
 Suggested order for testing:
 
+0- Say "Jarvis" or "Hey Jarvis" (Wake-word activation -> "Yes sir, how do I help you?" + auto voice command)
 1- What is the weather today
 2- Weather in London
 3- Latest news headlines
@@ -10,6 +11,56 @@ Suggested order for testing:
 8- What is quantum computing
 9- Increase brightness
 10- Volume up
+
+============================================================
+👂 HANDS-FREE WAKE-WORD ACTIVATION ("JARVIS", "HEY JARVIS")
+============================================================
+Jarvis now features full ambient wake-word recognition! Simply call:
+- "Jarvis"                     -> Wakes up, responds "Yes sir, how do I help you?", and immediately starts voice command capture!
+- "Hey Jarvis"                 -> Wakes up, responds "Yes sir, how do I help you?", and begins voice listening hands-free!
+- "Call Jarvis"                -> Greets with "Yes sir, how do I help you?" and opens voice listening
+- "Jarvis wake up"             -> Greets with "Yes sir, how do I help you?" and opens voice listening
+- "Hey Jarvis are you there"   -> Greets with "Yes sir, how do I help you?" and opens voice listening
+- "जार्विस"                     -> हिंदी में अभिवादन: "हाँ महोदय, मैं आपकी क्या सहायता कर सकता हूँ?" और वॉइस कमांड शुरू!
+- "सुनो जार्विस"               -> हिंदी में अभिवादन और वॉइस कमांड शुरू!
+
+Direct Compound Commands (No waiting required!):
+- "Jarvis what is the weather today"      -> Direct weather report
+- "Hey Jarvis, play Believer on YouTube"  -> Direct YouTube video autoplay
+- "Jarvis, play Arijit Singh on Spotify"  -> Direct Spotify playback
+- "Jarvis, difference between RAM and ROM"-> In-depth technical explanation
+- "जार्विस मौसम बताओ"                      -> सीधा हिंदी मौसम रिपोर्ट
+
+HUD Controls & Voice Commands for Wake Word:
+- Click the HUD button on Left Panel: [ 👂 WAKE: ON (HEY JARVIS) ] / [ 👂 WAKE: OFF (MUTED) ]
+- Voice command: "enable wake word" / "turn on wake word"
+- Voice command: "disable wake word" / "turn off wake word"
+
+============================================================
+🛑 COMMAND PREEMPTION & TERMINATION (INTERRUPT ON CALL)
+============================================================
+If an old command is actively running, searching, or speaking:
+- Calling "Jarvis" or "Hey Jarvis" INSTANTLY terminates the old command!
+  It cuts off active speech mid-syllable, clears pending typewriter text,
+  aborts background network pipelines, greets "Yes sir, how do I help you?",
+  and begins voice command capture for your new instruction.
+- Speaking a new compound command (e.g. "Jarvis play Believer on YouTube")
+  immediately halts the previous command and delivers output for the new command!
+- Immediate Stop / Cancel Voice Commands:
+  - "Stop" / "Cancel" / "Terminate" / "Quiet" / "Shut up" / "Halt"
+  - "रुको" / "चुप रहो" / "शांत रहो" / "बंद करो"
+  Instantly halts all active tasks, telemetry, and speech, replying "Standing by, sir."
+
+============================================================
+⚡ FAST VOICE RESPONSIVENESS & FAR-FIELD LOW-SOUND RECOGNITION
+============================================================
+Jarvis now features ultra-responsive acoustics and far-field whisper sensitivity:
+- Snappy Acoustic Cut-off (380ms): Halts capture within 0.38s of speech completion (cut down from 0.8s), giving an immediate, crisp response without awkward pauses.
+- Low-Sound & Average Distance Recognition (AGC Pre-Amp): Built-in Automatic Gain Control dynamically amplifies quiet commands, soft voices, and speech spoken from across the room or desk (up to +15.5 dB / 6.5x gain) without digital clipping or background noise amplification.
+- Ultra-Sensitive Acoustic Triggering: Features a low dynamic energy ratio (1.15x) and clamped ambient energy thresholds (90-280), ensuring quiet utterances trigger capture without getting discarded as silence.
+- Zero-Lag Capture Startup: Pre-calibrated noise floor at startup cuts live microphone engagement latency down to <= 40ms.
+- Persistent Multilingual Race Pool: Shared warm thread pool races Indian English (en-IN) and Hindi (hi-IN) concurrently with sub-60ms early-exit resolution.
+- Instant Local Routing (<1ms): Arithmetic calculations ("what is 25 * 48") and conversational dialogue ("who made you", "how are you") execute instantly in local memory before hitting external network or search pipelines.
 
 ============================================================
 🌤️ LIVE METEOROLOGICAL TELEMETRY (wttr.in Satellite Uplink)
@@ -47,19 +98,42 @@ You can SPEAK or TYPE:
 - "News about AI"                    -> Specific news dispatches on AI
 
 ============================================================
-🎬 SMART YOUTUBE DIRECT AUTOPLAY (Exact Match Instant Play)
+🎬 UNIVERSAL YOUTUBE VIDEO DISCOVERY & DIRECT AUTOPLAY (FIND ANY VIDEO!)
 ============================================================
-Jarvis searches YouTube in the background, extracts the exact video stream ID,
-and launches direct video playback in your browser with automatic playback!
+Jarvis accesses the complete global YouTube catalog to find and play ANY video:
+tutorials, programming courses, movie clips, music, scientific documentaries,
+podcasts, news, or reviews! It extracts the exact video title, channel/creator,
+and duration, displays rich telemetry on the HUD, and launches instant playback!
 
 You can SPEAK or TYPE:
-- "Play Believer on YouTube"         -> Plays Imagine Dragons - Believer
-- "Play Tum Hi Ho on YouTube"        -> Plays Arijit Singh - Tum Hi Ho
-- "Open YouTube and play Shape of You" -> Plays Ed Sheeran - Shape of You
-- "Play Starboy"                     -> Plays The Weeknd - Starboy
-- "Play relaxing lofi on YouTube"    -> Plays Lofi Chill Beats
-- "YouTube play Interstellar theme"  -> Plays Interstellar OST
-- "Play song Faded"                  -> Plays Alan Walker - Faded
+- "Find video of Python tutorial on YouTube" -> Finds and launches top Python tutorial course!
+- "Search YouTube for quantum physics"       -> Finds top quantum computing/physics documentary
+- "Watch Iron Man on YouTube"                -> Launches Iron Man clips & trailer
+- "Find on YouTube interstellar soundtrack"  -> Dispatches Interstellar OST
+- "Search video of SpaceX rocket launch"     -> Launches SpaceX rocket launch telemetry
+- "Play Believer on YouTube"                 -> Plays Imagine Dragons - Believer
+- "Play Tum Hi Ho on YouTube"                -> Plays Arijit Singh - Tum Hi Ho
+- "Open YouTube and play Shape of You"       -> Plays Ed Sheeran - Shape of You
+- "Play Starboy"                             -> Plays The Weeknd - Starboy
+- "Play relaxing lofi on YouTube"            -> Plays Lofi Chill Beats
+- "YouTube play Interstellar theme"          -> Plays Interstellar OST
+- "Play song Faded"                          -> Plays Alan Walker - Faded
+
+============================================================
+🎵 SPOTIFY MUSIC STREAMING & DESKTOP AUDIO DISPATCH
+============================================================
+Jarvis directly controls Spotify music playback! It triggers the Windows Spotify
+desktop application (or Spotify Web Player fallback) to stream any song, artist,
+album, or playlist requested via speech or typing!
+
+You can SPEAK or TYPE:
+- "Play Starboy on Spotify"                  -> Launches and plays The Weeknd - Starboy
+- "Play song Kesariya on Spotify"            -> Streams Arijit Singh - Kesariya on Spotify
+- "Spotify play Believer"                    -> Plays Imagine Dragons - Believer
+- "Open Spotify and play relaxing lofi"      -> Streams relaxing lofi chill beats
+- "Search Spotify for Taylor Swift"          -> Dispatches Taylor Swift tracks/artist page
+- "Play artist Arijit Singh on Spotify"      -> Opens Arijit Singh artist hub
+- "Spotify play Dil Diyan Gallan"            -> Plays Atif Aslam - Dil Diyan Gallan
 
 ============================================================
 🤖 AI PERSONAL ASSISTANT & WEB INTELLIGENCE SEARCH
@@ -184,3 +258,107 @@ Voice & Text Commands for ElevenLabs:
 - "Switch to elevenlabs" / "Switch to adam voice"  -> Sets ElevenLabs as primary voice engine
 - "Switch to sapi" / "Switch to offline voice"    -> Switches back to Windows SAPI David/Zira
 - GUI Control & API Key: Open "[🎙️ VOICE & AUDIO LAB]" to enter your XI-API-KEY for live dynamic cloud speech!
+
+============================================================
+🌐 BILINGUAL HINDI & ENGLISH COMMANDS (हिन्दी और अंग्रेज़ी)
+============================================================
+J.A.R.V.I.S now understands BOTH Hindi (Devanagari script and Romanized Hinglish)
+and English seamlessly! It can recognize voice and text in both languages, and speaks
+back in natural Hindi voice when addressed in Hindi, and English voice when addressed in English.
+
+Language Mode Toggles (Click "🌐 LANG" on HUD Left Panel or use Voice/Text):
+- "Switch to Hindi" / "हिंदी में बात करो"   -> Switches to HINDI EXCLUSIVE (hi-IN)
+- "Switch to English" / "English mode"      -> Switches to ENGLISH EXCLUSIVE (en-IN)
+- "Dual language" / "Bilingual mode"       -> Switches to DUAL (HI/EN AUTO-DETECT)
+
+Hindi Greetings & Conversational Queries:
+- "नमस्ते" / "Namaste" / "नमस्कार"         -> नमस्ते महोदय! J.A.R.V.I.S के सभी न्यूरल कोर सक्रिय हैं।
+- "आप कैसे हैं" / "Kaise ho" / "हाल बताओ"  -> मेरे सभी न्यूरल कोर पूरी क्षमता से काम कर रहे हैं।
+- "तुम कौन हो" / "आप कौन हैं" / "Tum kaun ho" -> मैं J.A.R.V.I.S हूँ, आपका होलोग्राफिक एआई असिस्टेंट।
+- "तुम क्या कर सकते हो" / "फीचर्स बताओ"    -> फीचर्स और कार्यप्रणाली का संपूर्ण विवरण
+- "धन्यवाद" / "शुक्रिया" / "Shukriya"      -> आपका बहुत-बहुत स्वागत है, महोदय!
+
+Hindi Time / Chronometer (12-Hour Format):
+- "क्या समय हुआ है" / "Kya samay hua hai" -> वर्तमान समय 12-घंटे AM/PM प्रारूप में बोलता है
+- "कितने बजे हैं" / "Kitne baje hain"     -> वर्तमान समय और दिनांक की लाइव घोषणा
+- "समय बताओ" / "Waqt batao"              -> समय टेलीमेट्री टर्मिनल और वॉइस फीड
+
+Hindi Weather Telemetry (लाइव मौसम टेलीमेट्री):
+- "मौसम बताओ" / "आज का मौसम कैसा है"      -> डिफ़ॉल्ट स्थान का लाइव मौसम और तापमान (हिन्दी में)
+- "दिल्ली में मौसम कैसा है" / "Delhi ka mausam" -> दिल्ली का तापमान, मौसम की स्थिति और हवा की गति
+- "मुंबई का मौसम" / "Mumbai me weather"   -> मुंबई की लाइव उपग्रह मौसम रिपोर्ट
+- "लखनऊ में मौसम कैसा है"                 -> उत्तर प्रदेश एवं लखनऊ का विस्तृत मौसम
+
+Hindi Live Satellite News (ताज़ा समाचार फ़ीड):
+- "ताज़ा समाचार" / "Samachar batao"        -> मुख्य राष्ट्रीय एवं अंतर्राष्ट्रीय समाचार (हिन्दी में)
+- "आज की खबरें" / "Khabrein sunao"        -> Google News हिन्दी RSS से ताज़ा समाचार बुलेटिन
+- "न्यूज़ सुनाओ" / "Breaking news hindi"   -> नंबर वाली ताज़ा समाचार हेडलाइंस और स्रोत
+
+Hindi YouTube Universal Video Discovery (यूट्यूब पर कोई भी वीडियो ढूंढें व चलाएं):
+- "यूट्यूब पर पाइथन ट्यूटोरियल वीडियो ढूंढो" -> Finds and launches Python tutorial in Hindi
+- "यूट्यूब पर मशीन लर्निंग सर्च करो"         -> Finds machine learning courses/videos on YouTube
+- "यूट्यूब पर चंद्रयान वीडियो दिखाओ"         -> Finds Chandrayaan video footage
+- "यूट्यूब पर केसरिया गाना चलाओ"            -> Launches direct YouTube playback for Kesariya
+- "यूट्यूब पर अरिजीत सिंह के गाने चलाओ"     -> Plays Arijit Singh songs on YouTube
+- "गाना चलाओ Shape of You"                  -> Plays Ed Sheeran - Shape of You
+- "चलाओ Believer" / "Bajao Believer"        -> Immediate YouTube video playback
+
+Hindi Spotify Music Streaming (स्पॉटिफ़ाई पर संगीत बजाएं):
+- "स्पॉटिफ़ाई पर अरिजीत सिंह के गाने चलाओ"  -> Streams Arijit Singh songs on Spotify
+- "स्पॉटिफ़ाई पर केसरिया गाना बजाओ"        -> Plays Kesariya on Spotify desktop/web
+- "स्पॉटिफ़ाई पर दिल दियां गल्लां सुनाओ"   -> Plays Dil Diyan Gallan on Spotify
+- "स्पॉटिफ़ाई खोलो और गाना चलाओ"            -> Opens Spotify player with music query
+- "spotify par lofi beats bajao"           -> Plays lofi chill beats on Spotify
+
+Hindi Web Navigation (वेबसाइट खोलें):
+- "गूगल खोलो" / "Google open karo"        -> Opens google.com
+- "यूट्यूब खोलो" / "YouTube open karo"    -> Opens youtube.com
+- "विकिपीडिया खोलो"                       -> Opens wikipedia.org
+- "अमेज़न खोलो" / "फ्लिपकार्ट खोलो"        -> Opens amazon.in / flipkart.com
+
+Hindi Hardware & Audio Controls (हार्डवेयर नियंत्रण):
+- "आवाज बढ़ाओ" / "Aawaz badhao"           -> Increases system volume (+10%) & speaks confirmation in Hindi
+- "आवाज कम करो" / "Aawaz kam karo"        -> Decreases system volume (-10%)
+- "म्यूट करो" / "आवाज बंद करो" / "शांत रहो"-> Mutes system audio
+- "ब्राइटनेस बढ़ाओ" / "रोशनी बढ़ाओ"        -> Increases monitor brightness
+- "ब्राइटनेस कम करो" / "रोशनी कम करो"      -> Decreases monitor brightness
+
+Hindi Web & Wikipedia Intelligence Search:
+- "भारत क्या है"                         -> Wikipedia हिन्दी ऑफिशियल आर्काइव से जानकारी
+- "महात्मा गांधी के बारे में बताओ"        -> हिन्दी विकिपीडिया सारांश और आवाज
+- "आर्टिफिशियल इंटेलिजेंस क्या है"          -> AI की विस्तृत जानकारी और हिन्दी वॉइस
+
+================================================================================
+15. AI NEURAL MODEL ENGINE, PRECISION MATH & COMPARATIVE INTELLIGENCE
+================================================================================
+
+Precision Mathematical & Calculation Core (गणितीय गणना):
+- "What is 25 * 48"                     -> Immediate calculation: 1,200 with telemetry
+- "Calculate 15 percent of 850"         -> Instant percentage evaluation: 127.5
+- "What is square root of 144"          -> Instant square root evaluation: 12
+- "Solve (10 + 20) * 4"                 -> Precision arithmetic evaluation: 120
+- "100 divided by 4"                    -> Division evaluation: 25
+- "50 guna 20" / "25 jod 75"            -> Hindi mathematical expressions: 1000 / 100
+
+Multi-Entity Comparative Intelligence Matrix (तुलनात्मक विश्लेषण):
+- "Difference between RAM and ROM"      -> Full structured comparative matrix of RAM vs ROM
+- "Compare Python and C++"              -> Comprehensive dual-language comparison
+- "Differences between AC and DC"       -> Detailed electrical current contrast analysis
+- "RAM aur ROM me kya antar hai"        -> Hindi comparative breakdown with spoken summary
+
+Scientific & Conceptual Deep Knowledge Retrieval:
+- "Why is the sky blue"                 -> Scientific Rayleigh scattering deep intelligence
+- "How does a rocket engine work"       -> Newton's third law reaction mass deep physics
+- "How do airplanes fly"                -> Aerodynamic lift force principles & Bernoulli
+- "Explain machine learning"            -> Comprehensive multi-paragraph AI foundation
+- "What is quantum computing"           -> Qubits, superposition, and quantum algorithms
+
+AI Neural Model Configuration & Voice Management:
+- "Open AI Lab" / "AI settings"         -> Launches Voice & AI Neural Model Lab modal
+- "Set Groq key <gsk_...>"              -> Saves Groq API key and activates Llama 3.3 70B
+- "Set Gemini key <AIza...>"            -> Saves Google Gemini key and activates Gemini 2.0 Flash
+- "Set OpenAI key <sk-...>"             -> Saves OpenAI key and activates GPT-4o-mini
+- "Switch model to Groq"                -> Switches active AI inference provider to Groq
+- "Switch model to Gemini"              -> Switches active AI provider to Google Gemini
+- "Switch model to Ollama"              -> Switches to local offline Ollama inference
+- "Test AI model"                       -> Tests neural link and reports roundtrip status
