@@ -23,6 +23,12 @@ import xml.etree.ElementTree as ET
 from html import unescape
 import collections
 import atexit
+import warnings
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except Exception:
+    pass
 try:
     import psutil
     _HAS_PSUTIL = True
@@ -159,9 +165,6 @@ DEFAULT_CONFIG = {
     "voice_index": 0,
     "voice_name": "Microsoft David Desktop - English (United States)",
     "tts_engine": "sapi",
-    "elevenlabs_voice_id": "IRHApOXLvnW57QJPQH2P",
-    "elevenlabs_voice_name": "Adam - American, Dark and Tough",
-    "elevenlabs_api_key": "",
     "ai_provider": "auto",
     "ai_api_key": "",
     "ai_model": "llama-3.3-70b-versatile",
@@ -612,173 +615,32 @@ def play_audio_file(file_path, async_play=True):
 
 
 def download_elevenlabs_voice(voice_id="IRHApOXLvnW57QJPQH2P"):
-    """
-    Downloads voice preview audio and metadata for an ElevenLabs voice ID.
-    Works for any shared or community voice without requiring an API key.
-    Employs lock-resistant atomic file replacement to prevent [Errno 13] on Windows.
-    Returns (success: bool, info_dict: dict, file_path: str, message: str)
-    """
-    try:
-        url = f"https://api.elevenlabs.io/v1/shared-voices/{voice_id}"
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-
-        meta_file = VOICES_DIR / f"{voice_id}.json"
-        with open(meta_file, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-
-        preview_url = data.get("preview_url")
-        if not preview_url:
-            for vl in data.get("verified_languages", []):
-                if vl.get("preview_url"):
-                    preview_url = vl["preview_url"]
-                    break
-
-        if not preview_url:
-            return False, data, None, "No preview audio URL found in voice metadata."
-
-        out_audio = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
-        temp_dl = VOICES_DIR / f"elevenlabs_{voice_id}_dl_{int(_time.time())}.tmp"
-
-        aud_req = urllib.request.Request(preview_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
-        with urllib.request.urlopen(aud_req, timeout=25) as a_resp:
-            audio_bytes = a_resp.read()
-
-        with open(temp_dl, "wb") as tf:
-            tf.write(audio_bytes)
-
-        # Atomic replacement with Windows handle-lock recovery
-        if out_audio.exists():
-            try:
-                os.replace(temp_dl, out_audio)
-            except PermissionError:
-                # If existing out_audio is currently open by a media player or process, rename it to .old and place new file
-                old_bak = VOICES_DIR / f"elevenlabs_{voice_id}_preview_{int(_time.time())}.old"
-                try:
-                    os.rename(out_audio, old_bak)
-                    os.replace(temp_dl, out_audio)
-                except Exception:
-                    # Final fallback: copy bytes
-                    shutil.copyfile(str(temp_dl), str(out_audio))
-                    temp_dl.unlink(missing_ok=True)
-        else:
-            os.replace(temp_dl, out_audio)
-
-        # Clean up any leftover .old files if unblocked
-        for old_f in VOICES_DIR.glob(f"elevenlabs_{voice_id}_*.old"):
-            try:
-                old_f.unlink(missing_ok=True)
-            except Exception:
-                pass
-
-        return True, data, str(out_audio), f"Voice '{data.get('name')}' downloaded successfully ({out_audio.stat().st_size // 1024} KB)."
-    except Exception as e:
-        return False, {}, None, str(e)
+    """Decommissioned: Project exclusively uses default Microsoft offline voices."""
+    return False, {}, None, "Project configured to use default Microsoft voices only."
 
 
 def get_elevenlabs_voice_status(voice_id="IRHApOXLvnW57QJPQH2P"):
-    """Returns information on whether the voice preview and metadata are cached locally."""
-    audio_path = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
-    meta_path = VOICES_DIR / f"{voice_id}.json"
-    is_downloaded = audio_path.exists() and audio_path.stat().st_size > 1000
-    meta = {}
-    if meta_path.exists():
-        try:
-            with open(meta_path, "r", encoding="utf-8") as f:
-                meta = json.load(f)
-        except Exception:
-            pass
+    """Decommissioned: Project exclusively uses default Microsoft offline voices."""
     return {
-        "downloaded": is_downloaded,
-        "audio_path": str(audio_path) if is_downloaded else None,
-        "size_kb": (audio_path.stat().st_size // 1024) if is_downloaded else 0,
-        "name": meta.get("name", "Adam - American, Dark and Tough"),
-        "accent": meta.get("accent", "american"),
-        "gender": meta.get("gender", "male"),
-        "description": meta.get("description", "A tough hero, weathered by years of experience. American accent."),
-        "voice_id": voice_id
+        "downloaded": False,
+        "audio_path": None,
+        "size_kb": 0,
+        "name": "Microsoft Offline Voice Core",
+        "accent": "american",
+        "gender": "male",
+        "description": "Default Microsoft Windows SAPI Voice",
+        "voice_id": "sapi"
     }
 
 
 def audition_elevenlabs_voice(voice_id="IRHApOXLvnW57QJPQH2P"):
-    """Auditions the downloaded ElevenLabs voice sample."""
-    audio_path = VOICES_DIR / f"elevenlabs_{voice_id}_preview.mp3"
-    if not audio_path.exists():
-        success, meta, p, msg = download_elevenlabs_voice(voice_id)
-        if not success:
-            speak(f"Unable to download ElevenLabs voice. Error: {msg}")
-            return False
-        audio_path = Path(p)
-
-    status = get_elevenlabs_voice_status(voice_id)
-    terminal_feed_log("VOICE", f"Auditioning ElevenLabs Voice: {status['name']} (ID: {voice_id})")
-    _safe_ui_update(lambda: set_status(f"◈  AUDITIONING ELEVENLABS: {status['name'][:24]}...", C.get("cyan_br", "#40ffff")))
-    play_audio_file(audio_path, async_play=True)
-    return True
+    """Decommissioned: Project exclusively uses default Microsoft offline voices."""
+    return False
 
 
 def synthesize_elevenlabs_speech(text, voice_id="IRHApOXLvnW57QJPQH2P", api_key=None):
-    """
-    Synthesizes custom text into speech using ElevenLabs Neural TTS API.
-    Requires a valid ElevenLabs API key.
-    """
-    if not api_key:
-        api_key = hud_config.get("elevenlabs_api_key", "").strip()
-    if not api_key:
-        return False, None, "ElevenLabs API key not configured."
-
-    import hashlib
-    text_hash = hashlib.md5(f"{voice_id}_{text}".encode("utf-8")).hexdigest()
-    cache_file = CACHE_DIR / f"el_{text_hash[:16]}.mp3"
-    if cache_file.exists() and cache_file.stat().st_size > 500:
-        return True, str(cache_file), None
-
-    def _call_api(vid):
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{vid}"
-        payload = json.dumps({
-            "text": text,
-            "model_id": "eleven_turbo_v2_5",
-            "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.75
-            }
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            url,
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "xi-api-key": api_key,
-                "User-Agent": "JARVIS-AI-Voice-Assistant/2.0"
-            },
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=25) as resp:
-            return resp.read()
-
-    try:
-        try:
-            content = _call_api(voice_id)
-        except urllib.error.HTTPError as he:
-            # If community library voice is restricted on free tier (HTTP 402), fallback to built-in Adam
-            if he.code == 402 and voice_id == "IRHApOXLvnW57QJPQH2P":
-                terminal_feed_log("TTS", "Library voice requires subscription; generating via official Adam neural core.")
-                content = _call_api("pNInz6obpgDQGcFmaJgB")
-            else:
-                raise
-
-        temp_cf = CACHE_DIR / f"el_{text_hash[:16]}_{int(_time.time())}.tmp"
-        with open(temp_cf, "wb") as cf:
-            cf.write(content)
-        try:
-            os.replace(temp_cf, cache_file)
-        except Exception:
-            shutil.copyfile(str(temp_cf), str(cache_file))
-            temp_cf.unlink(missing_ok=True)
-        return True, str(cache_file), None
-    except Exception as ex:
-        return False, None, str(ex)
+    """Decommissioned: Project exclusively uses default Microsoft offline voices."""
+    return False, None, "Project configured to use default Microsoft voices only."
 
 
 def synthesize_hindi_speech(text):
@@ -838,11 +700,14 @@ def get_available_voices():
                 item = sapi_v.Item(i)
                 desc = item.GetDescription()
                 vid = item.Id
+                # Ensure only default Microsoft voices are used
+                if "microsoft" not in desc.lower() and sapi_v.Count > 1:
+                    continue
                 is_fem = any(k in desc.lower() for k in ("zira", "female", "eva", "hazel", "susan", "heera"))
-                tag = "NEURAL FEMALE" if is_fem else "TACTICAL MALE"
+                tag = "MICROSOFT ZIRA (FEMALE)" if is_fem else "MICROSOFT DAVID (MALE)"
                 alias = "F.R.I.D.A.Y" if is_fem else "J.A.R.V.I.S"
                 voices_found.append({
-                    "index": i,
+                    "index": len(voices_found),
                     "name": desc,
                     "id": vid,
                     "alias": alias,
@@ -855,12 +720,14 @@ def get_available_voices():
     if not voices_found:
         try:
             eng = pyttsx3.init()
-            for i, pv in enumerate(eng.getProperty("voices")):
+            for pv in eng.getProperty("voices"):
+                if "microsoft" not in pv.name.lower() and len(eng.getProperty("voices")) > 1:
+                    continue
                 is_fem = any(k in pv.name.lower() for k in ("zira", "female", "eva", "hazel", "susan", "heera"))
-                tag = "NEURAL FEMALE" if is_fem else "TACTICAL MALE"
+                tag = "MICROSOFT ZIRA (FEMALE)" if is_fem else "MICROSOFT DAVID (MALE)"
                 alias = "F.R.I.D.A.Y" if is_fem else "J.A.R.V.I.S"
                 voices_found.append({
-                    "index": i,
+                    "index": len(voices_found),
                     "name": pv.name,
                     "id": pv.id,
                     "alias": alias,
@@ -873,10 +740,10 @@ def get_available_voices():
     if not voices_found:
         voices_found = [{
             "index": 0,
-            "name": "System Default Voice",
+            "name": "Microsoft David Desktop - English (United States)",
             "id": "default",
             "alias": "J.A.R.V.I.S",
-            "tag": "TACTICAL MALE",
+            "tag": "MICROSOFT DAVID (MALE)",
             "is_female": False,
         }]
 
@@ -1048,13 +915,6 @@ def _tts_daemon_loop():
                 v_coll = spk[1].GetVoices()
                 if 0 <= idx < v_coll.Count:
                     spk[1].Voice = v_coll.Item(idx)
-                    try:
-                        spk[1].AllowAudioOutputFormatChangesOnNextSet = True
-                        fmt = win32com.client.Dispatch("SAPI.SpAudioFormat")
-                        fmt.Type = 22  # SAFT22kHz16BitMono
-                        spk[1].AudioOutputStream.Format = fmt
-                    except Exception:
-                        pass
             elif spk[0] == "pyttsx3":
                 p_v = spk[1].getProperty("voices")
                 if 0 <= idx < len(p_v):
@@ -1098,7 +958,7 @@ def _tts_daemon_loop():
             return True
         return True
 
-    # Priority 1: Native Windows SAPI.SpVoice via win32com (direct C++ COM, no deadlocks)
+    # Priority 1: Native Windows SAPI.SpVoice via win32com (direct C++ COM, default native pitch)
     try:
         if _HAS_WIN32COM:
             pythoncom.CoInitialize()
@@ -1109,13 +969,6 @@ def _tts_daemon_loop():
             voices = sapi_voice.GetVoices()
             if 0 <= init_idx < voices.Count:
                 sapi_voice.Voice = voices.Item(init_idx)
-            try:
-                sapi_voice.AllowAudioOutputFormatChangesOnNextSet = True
-                fmt = win32com.client.Dispatch("SAPI.SpAudioFormat")
-                fmt.Type = 22  # SAFT22kHz16BitMono
-                sapi_voice.AudioOutputStream.Format = fmt
-            except Exception:
-                pass
             speaker = ("sapi", sapi_voice)
             _active_speaker = speaker
             print(f"J.A.R.V.I.S Native SAPI Speech Engine Online. Active: {sapi_voice.Voice.GetDescription()}")
@@ -1177,11 +1030,6 @@ def _tts_daemon_loop():
                 _safe_ui_update(lambda: set_status("◎  SYSTEMS NOMINAL", C.get("cyan", "#00e5ff")))
                 _tts_queue.task_done()
                 continue
-            elif isinstance(item, tuple) and item[0] == "AUDITION_ELEVENLABS":
-                vid = item[1]
-                audition_elevenlabs_voice(vid)
-                _tts_queue.task_done()
-                continue
             elif isinstance(item, tuple) and len(item) == 2 and isinstance(item[0], int):
                 cmd_id, text = item[0], item[1]
             else:
@@ -1205,40 +1053,17 @@ def _tts_daemon_loop():
             # Clean and expand symbols so the complete result is spoken naturally
             cleaned_text = clean_for_speech(text)
 
-            # Check if ElevenLabs Neural Cloud TTS is active
-            tts_mode = hud_config.get("tts_engine", "sapi")
-            el_key = hud_config.get("elevenlabs_api_key", "").strip()
-            el_voice = hud_config.get("elevenlabs_voice_id", "IRHApOXLvnW57QJPQH2P")
-            if tts_mode == "elevenlabs" and el_key:
-                if cmd_id is not None and cmd_id < _current_command_id:
-                    _tts_queue.task_done()
-                    continue
-                _safe_ui_update(lambda: set_status("◈  ELEVENLABS NEURAL TTS...", C.get("cyan_br", "#40ffff")))
-                succ, el_audio, err = synthesize_elevenlabs_speech(cleaned_text, el_voice, el_key)
-                if _tts_interrupt_event.is_set() or (cmd_id is not None and cmd_id < _current_command_id):
-                    _tts_queue.task_done()
-                    continue
-                if succ and el_audio:
-                    play_audio_file(el_audio, async_play=False)
-                    if _tts_queue.empty() and not _anim.get("processing", False):
-                        _anim["speaking"] = False
-                        _safe_ui_update(lambda: set_status("◎  SYSTEMS NOMINAL", C.get("cyan", "#00e5ff")))
-                    _tts_queue.task_done()
-                    continue
-                else:
-                    terminal_feed_log("TTS", f"ElevenLabs fallback to SAPI: {err}")
-
-            # Dynamic rate adjustment (mapped to prevent diphone chopping and phase cracking)
+            # Dynamic rate adjustment (maintaining 100% natural Microsoft voice pitch)
             try:
                 rate_val = hud_config.get("voice_rate", 175)
                 if speaker[0] == "sapi":
-                    # Nominal rate 165-195 WPM maps to Rate 0 (natural diphone delivery without cracking)
-                    if 165 <= rate_val <= 195:
+                    # Keep Rate at 0 for natural pitch and authentic Microsoft voice delivery
+                    if 150 <= rate_val <= 200:
                         speaker[1].Rate = 0
-                    elif rate_val > 195:
-                        speaker[1].Rate = max(1, min(2, int((rate_val - 195) / 25) + 1))
+                    elif rate_val > 200:
+                        speaker[1].Rate = min(2, int((rate_val - 200) / 25) + 1)
                     else:
-                        speaker[1].Rate = max(-2, min(-1, int((rate_val - 165) / 25) - 1))
+                        speaker[1].Rate = 0  # Avoid negative rates that slur or alter pitch
                 elif speaker[0] == "pyttsx3":
                     speaker[1].setProperty("rate", rate_val)
             except Exception:
@@ -1621,7 +1446,10 @@ def normalize_voice_command(raw_query):
     for pattern in trailing_patterns:
         q = re.sub(pattern, "", q, flags=re.IGNORECASE).strip()
 
-    # 4. Remove leading/trailing stray punctuation marks
+    # 4. Phonetic & common misspelling normalization
+    q = re.sub(r"\bwether\b", "weather", q, flags=re.IGNORECASE)
+
+    # 5. Remove leading/trailing stray punctuation marks
     q = q.strip(" ,.?!;:-\"' \t\n\r")
     return q or str(raw_query).strip()
 
@@ -2681,6 +2509,102 @@ def volume_mute():
 # ║  METEOROLOGICAL INTELLIGENCE (WTTR.IN SATELLITE TELEMETRY)       ║
 # ╚══════════════════════════════════════════════════════════════════╝
 
+WMO_WEATHER_MAP = {
+    0: ("Clear sky", "साफ आसमान"),
+    1: ("Mainly clear", "मुख्य रूप से साफ आसमान"),
+    2: ("Partly cloudy", "आंशिक रूप से बादल"),
+    3: ("Overcast", "घने बादल"),
+    45: ("Fog", "कोहरा"),
+    48: ("Depositing rime fog", "घना कोहरा"),
+    51: ("Light drizzle", "हल्की बूंदाबांदी"),
+    53: ("Moderate drizzle", "मध्यम बूंदाबांदी"),
+    55: ("Dense drizzle", "तेज बूंदाबांदी"),
+    61: ("Slight rain", "हल्की बारिश"),
+    63: ("Moderate rain", "मध्यम बारिश"),
+    65: ("Heavy rain", "भारी बारिश"),
+    71: ("Slight snow", "हल्की बर्फबारी"),
+    73: ("Moderate snow", "मध्यम बर्फबारी"),
+    75: ("Heavy snow", "भारी बर्फबारी"),
+    80: ("Slight rain showers", "हल्की बारिश की बौछारें"),
+    81: ("Moderate rain showers", "मध्यम बौछारें"),
+    82: ("Violent rain showers", "तेज बारिश की बौछारें"),
+    95: ("Thunderstorm", "गरज के साथ तूफान"),
+    96: ("Thunderstorm with slight hail", "ओलों के साथ तूफान"),
+    99: ("Thunderstorm with heavy hail", "ओलों के साथ भारी तूफान"),
+}
+
+def _fetch_open_meteo_fallback(target, is_hindi=False):
+    geo_query = target.strip()
+    geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(geo_query)}&count=1&language=en&format=json"
+    r_geo = requests.get(geo_url, timeout=5, verify=False).json()
+    results = r_geo.get("results", [])
+    if not results and "," in geo_query:
+        first_part = geo_query.split(",")[0].strip()
+        r_geo = requests.get(f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(first_part)}&count=1&language=en&format=json", timeout=5, verify=False).json()
+        results = r_geo.get("results", [])
+    if not results:
+        raise Exception(f"Geocoding resolution failed for '{target}'")
+
+    res = results[0]
+    lat, lon = res["latitude"], res["longitude"]
+    city_name = res.get("name", geo_query.split(",")[0].strip())
+    country_name = res.get("country", "")
+    admin1 = res.get("admin1", "")
+
+    if admin1 and admin1.lower() != city_name.lower():
+        loc_display = f"{city_name}, {admin1}, {country_name}" if country_name else f"{city_name}, {admin1}"
+    elif country_name:
+        loc_display = f"{city_name}, {country_name}"
+    else:
+        loc_display = city_name
+
+    forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m"
+    w_data = requests.get(forecast_url, timeout=5, verify=False).json()
+    cur = w_data.get("current", {})
+
+    temp_c = cur.get("temperature_2m", "N/A")
+    temp_f = round(temp_c * 9/5 + 32, 1) if isinstance(temp_c, (int, float)) else "N/A"
+    feels_c = cur.get("apparent_temperature", temp_c)
+    w_code = cur.get("weather_code", 0)
+    desc_en, desc_hi = WMO_WEATHER_MAP.get(w_code, ("Clear", "साफ"))
+    desc = desc_hi if is_hindi else desc_en
+    humidity = cur.get("relative_humidity_2m", "N/A")
+    wind = cur.get("wind_speed_10m", "N/A")
+
+    lines = [
+        "------------------------------------------------------------",
+        "   METEOROLOGICAL SATELLITE TELEMETRY // Open-Meteo Uplink  ",
+        "------------------------------------------------------------",
+        f"LOCATION:       {loc_display.upper()}",
+        f"TEMPERATURE:    {temp_c} deg C ({temp_f} deg F) | Feels like: {feels_c} deg C",
+        f"CONDITIONS:     {desc}",
+        f"HUMIDITY:       {humidity}%",
+        f"WIND VELOCITY:  {wind} km/h",
+        "------------------------------------------------------------",
+        "Atmospheric telemetry synchronized with orbital satellites."
+    ]
+    report_text = "\n".join(lines)
+    if is_hindi:
+        speech_text = (
+            f"{loc_display} में वर्तमान तापमान {temp_c} डिग्री सेल्सियस है, स्थिति {desc}। "
+            f"आर्द्रता {humidity} प्रतिशत और हवा की गति {wind} किलोमीटर प्रति घंटा है।"
+        )
+    else:
+        speech_text = (
+            f"Current meteorological telemetry for {loc_display}. "
+            f"Conditions: {desc}. "
+            f"Temperature is {temp_c} degrees Celsius, {temp_f} degrees Fahrenheit, with a feels-like temperature of {feels_c} degrees Celsius. "
+            f"Relative humidity is {humidity} percent. "
+            f"Wind velocity is {wind} kilometers per hour. "
+            f"Atmospheric telemetry synchronized with orbital satellites."
+        )
+
+    return {
+        "city": city_name,
+        "full_text": report_text,
+        "speech_text": speech_text,
+    }
+
 def extract_weather_location(query):
     q = query.strip()
     # Check Hindi city matches first if present
@@ -2701,21 +2625,21 @@ def extract_weather_location(query):
             return HINDI_CITY_MAP[c]
 
     # Hinglish patterns: "delhi ka mausam", "mumbai me weather"
-    m_hing = re.search(r"([a-zA-Z]+)\s+(?:ka|me|mein)\s+(?:mausam|weather|temperature)", q, re.IGNORECASE)
+    m_hing = re.search(r"([a-zA-Z\s]+?)\s+(?:ka|me|mein)\s+(?:mausam|weather|wether|temperature)", q, re.IGNORECASE)
     if m_hing:
         return m_hing.group(1).strip().title()
 
     q_lower = q.lower()
-    m = re.search(r"(?:weather|temperature|climate|forecast)\s+(?:in|of|at|for)\s+([a-zA-Z\s]+)", q_lower)
+    m = re.search(r"(?:weather|wether|temperature|climate|forecast)\s+(?:in|of|at|for)\s+([a-zA-Z\s,]+)", q_lower)
     if m:
-        loc = m.group(1).strip()
-        loc = re.sub(r"\b(today|now|right now|currently|please|jarvis)\b", "", loc).strip()
+        loc = m.group(1).strip().strip(",").strip()
+        loc = re.sub(r"\b(today|now|right now|currently|please|jarvis)\b", "", loc, flags=re.IGNORECASE).strip().strip(",").strip()
         if loc:
             return loc.title()
 
-    m = re.search(r"^([a-zA-Z\s]+?)\s+(?:weather|temperature|climate|forecast)$", q_lower)
+    m = re.search(r"^([a-zA-Z\s,]+?)\s+(?:weather|wether|temperature|climate|forecast)$", q_lower)
     if m:
-        candidate = m.group(1).strip()
+        candidate = m.group(1).strip().strip(",").strip()
         stop_words = {
             "what is the", "what is", "what's the", "whats the", "tell me the",
             "tell me", "how is the", "how is", "check the", "check", "the", "current",
@@ -2729,82 +2653,120 @@ def extract_weather_location(query):
 def fetch_weather(location=None, is_hindi=False):
     headers = {"User-Agent": "Jarvis-HUD-Meteo/3.2"}
     target = location or hud_config.get("default_location", "Uttar Pradesh, India")
-    url = f"https://wttr.in/{urllib.parse.quote(target)}?format=j1"
+    target_clean = target.strip()
 
-    res = requests.get(url, headers=headers, timeout=6)
-    if res.status_code != 200:
-        raise Exception(f"Atmospheric link status {res.status_code}")
-
-    data = res.json()
-    cur = data.get("current_condition", [{}])[0]
-    area_obj = data.get("nearest_area", [{}])[0]
-    area_name = area_obj.get("areaName", [{}])[0].get("value", "").strip()
-    region_name = area_obj.get("region", [{}])[0].get("value", "").strip()
-    country_name = area_obj.get("country", [{}])[0].get("value", "").strip()
-
-    t_clean = target.strip().title()
-    t_lower = target.strip().lower()
-
-    if country_name and t_lower == country_name.lower():
-        city = country_name
-        loc_display = country_name
-    elif region_name and (region_name.lower() in t_lower or all(w in t_lower for w in region_name.lower().split())):
-        city = region_name
-        loc_display = f"{region_name}, {country_name}" if country_name else region_name
-    elif area_name and (area_name.lower() in t_lower or t_lower in area_name.lower()):
-        city = area_name
-        loc_display = f"{area_name}, {country_name}" if country_name else area_name
-    elif country_name and country_name.lower() in t_lower:
-        city = t_clean
-        loc_display = t_clean
-    else:
-        city = t_clean
-        loc_display = f"{t_clean}, {country_name}" if country_name else t_clean
-
-    temp_c = cur.get("temp_C", "N/A")
-    temp_f = cur.get("temp_F", "N/A")
-    feels_c = cur.get("FeelsLikeC", temp_c)
-    desc = cur.get("weatherDesc", [{}])[0].get("value", "Clear").strip()
-    humidity = cur.get("humidity", "N/A")
-    wind = cur.get("windspeedKmph", "N/A")
-    uv = cur.get("uvIndex", "N/A")
-    vis = cur.get("visibility", "N/A")
-
-    lines = [
-        "------------------------------------------------------------",
-        "   METEOROLOGICAL SATELLITE TELEMETRY // wttr.in            ",
-        "------------------------------------------------------------",
-        f"LOCATION:       {loc_display.upper()}",
-        f"TEMPERATURE:    {temp_c} deg C ({temp_f} deg F) | Feels like: {feels_c} deg C",
-        f"CONDITIONS:     {desc}",
-        f"HUMIDITY:       {humidity}%",
-        f"WIND VELOCITY:  {wind} km/h",
-        f"UV INDEX:       {uv} | Visibility: {vis} km",
-        "------------------------------------------------------------",
-        "Atmospheric telemetry synchronized with orbital satellites."
+    # Tier 1 & 2: wttr.in with SSL fallback and HTTP fallback
+    res = None
+    urls_to_try = [
+        (f"https://wttr.in/{urllib.parse.quote(target_clean)}?format=j1", True),
+        (f"https://wttr.in/{urllib.parse.quote(target_clean)}?format=j1", False),
+        (f"http://wttr.in/{urllib.parse.quote(target_clean)}?format=j1", True),
     ]
-    report_text = "\n".join(lines)
-    if is_hindi:
-        speech_text = (
-            f"{loc_display} में वर्तमान तापमान {temp_c} डिग्री सेल्सियस है, स्थिति {desc}। "
-            f"आर्द्रता {humidity} प्रतिशत और हवा की गति {wind} किलोमीटर प्रति घंटा है।"
-        )
-    else:
-        speech_text = (
-            f"Current meteorological telemetry for {loc_display}. "
-            f"Conditions: {desc}. "
-            f"Temperature is {temp_c} degrees Celsius, {temp_f} degrees Fahrenheit, with a feels-like temperature of {feels_c} degrees Celsius. "
-            f"Relative humidity is {humidity} percent. "
-            f"Wind velocity is {wind} kilometers per hour. "
-            f"UV index is {uv}, with visibility of {vis} kilometers. "
-            f"Atmospheric telemetry synchronized with orbital satellites."
-        )
 
-    return {
-        "city": city,
-        "full_text": report_text,
-        "speech_text": speech_text,
-    }
+    last_err = None
+    for url, verify_ssl in urls_to_try:
+        try:
+            r = requests.get(url, headers=headers, timeout=5, verify=verify_ssl)
+            if r.status_code == 200:
+                res = r
+                break
+        except Exception as ex:
+            last_err = ex
+            continue
+
+    if res is not None and res.status_code == 200:
+        try:
+            data = res.json()
+            cur_list = data.get("current_condition") or [{}]
+            cur = cur_list[0] if cur_list else {}
+
+            area_list = data.get("nearest_area") or [{}]
+            area_obj = area_list[0] if area_list else {}
+
+            def _get_val(obj, key):
+                items = obj.get(key) or [{}]
+                if isinstance(items, list) and items and isinstance(items[0], dict):
+                    return items[0].get("value", "").strip()
+                return ""
+
+            area_name = _get_val(area_obj, "areaName")
+            region_name = _get_val(area_obj, "region")
+            country_name = _get_val(area_obj, "country")
+
+            t_clean = target_clean.title()
+            t_lower = target_clean.lower()
+
+            if country_name and t_lower == country_name.lower():
+                city = country_name
+                loc_display = country_name
+            elif region_name and (region_name.lower() in t_lower or all(w in t_lower for w in region_name.lower().split())):
+                city = region_name
+                loc_display = f"{region_name}, {country_name}" if country_name else region_name
+            elif area_name and (area_name.lower() in t_lower or t_lower in area_name.lower()):
+                city = area_name
+                loc_display = f"{area_name}, {country_name}" if country_name else area_name
+            elif country_name and country_name.lower() in t_lower:
+                city = t_clean
+                loc_display = t_clean
+            else:
+                city = t_clean
+                loc_display = f"{t_clean}, {country_name}" if country_name else t_clean
+
+            temp_c = cur.get("temp_C", "N/A")
+            temp_f = cur.get("temp_F", "N/A")
+            feels_c = cur.get("FeelsLikeC", temp_c)
+            desc_items = cur.get("weatherDesc") or [{}]
+            desc = desc_items[0].get("value", "Clear").strip() if desc_items and isinstance(desc_items[0], dict) else "Clear"
+            humidity = cur.get("humidity", "N/A")
+            wind = cur.get("windspeedKmph", "N/A")
+            uv = cur.get("uvIndex", "N/A")
+            vis = cur.get("visibility", "N/A")
+
+            lines = [
+                "------------------------------------------------------------",
+                "   METEOROLOGICAL SATELLITE TELEMETRY // wttr.in            ",
+                "------------------------------------------------------------",
+                f"LOCATION:       {loc_display.upper()}",
+                f"TEMPERATURE:    {temp_c} deg C ({temp_f} deg F) | Feels like: {feels_c} deg C",
+                f"CONDITIONS:     {desc}",
+                f"HUMIDITY:       {humidity}%",
+                f"WIND VELOCITY:  {wind} km/h",
+                f"UV INDEX:       {uv} | Visibility: {vis} km",
+                "------------------------------------------------------------",
+                "Atmospheric telemetry synchronized with orbital satellites."
+            ]
+            report_text = "\n".join(lines)
+            if is_hindi:
+                speech_text = (
+                    f"{loc_display} में वर्तमान तापमान {temp_c} डिग्री सेल्सियस है, स्थिति {desc}। "
+                    f"आर्द्रता {humidity} प्रतिशत और हवा की गति {wind} किलोमीटर प्रति घंटा है।"
+                )
+            else:
+                speech_text = (
+                    f"Current meteorological telemetry for {loc_display}. "
+                    f"Conditions: {desc}. "
+                    f"Temperature is {temp_c} degrees Celsius, {temp_f} degrees Fahrenheit, with a feels-like temperature of {feels_c} degrees Celsius. "
+                    f"Relative humidity is {humidity} percent. "
+                    f"Wind velocity is {wind} kilometers per hour. "
+                    f"UV index is {uv}, with visibility of {vis} kilometers. "
+                    f"Atmospheric telemetry synchronized with orbital satellites."
+                )
+
+            return {
+                "city": city,
+                "full_text": report_text,
+                "speech_text": speech_text,
+            }
+        except Exception as parse_err:
+            last_err = parse_err
+
+    # Tier 3: Secondary fallback to Open-Meteo
+    try:
+        return _fetch_open_meteo_fallback(target_clean, is_hindi=is_hindi)
+    except Exception as om_err:
+        if last_err:
+            raise Exception(f"Meteo downlink failed (wttr: {last_err}, Open-Meteo: {om_err})")
+        raise om_err
 
 def weather_telemetry(location=None, cmd_id=None, is_hindi=False):
     if cmd_id is not None and cmd_id != _current_command_id:
@@ -3596,57 +3558,18 @@ def execute_command_thread(raw_query, cmd_id=None):
         _finish_command(cmd_id)
         return
 
-    # ElevenLabs Neural Voice Commands
-    if any(k in query for k in ("download voice", "download elevenlabs voice", "download eleven labs voice", "download eleven labs", "download adam voice", "download voice sample")):
-        play_sfx("downlink")
-        terminal_feed_log("VOICE", "Downloading ElevenLabs voice IRHApOXLvnW57QJPQH2P (Adam)...")
-        speak("Downloading ElevenLabs voice profile Adam, Voice ID IRHApOXLvnW57QJPQH2P.", cmd_id=cmd_id)
-        def _bg_dl(captured_id=cmd_id):
-            succ, meta, path, msg = download_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
-            if captured_id != _current_command_id:
-                return
-            if succ:
-                terminal_feed_log("VOICE", f"ElevenLabs Voice Downloaded: {meta.get('name', 'Adam')}")
-                speak("ElevenLabs voice profile Adam downloaded successfully. Auditioning downloaded sample now.", cmd_id=captured_id)
-                _time.sleep(0.5)
-                if captured_id == _current_command_id:
-                    audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
-            else:
-                terminal_feed_log("VOICE", f"Download failed: {msg}")
-                speak(f"Voice download failed. Reason: {msg}", cmd_id=captured_id)
-        threading.Thread(target=_bg_dl, daemon=True).start()
-        _finish_command(cmd_id)
-        return
-
-    if any(k in query for k in ("audition elevenlabs", "audition eleven labs", "audition adam", "play elevenlabs", "play eleven labs", "play voice sample", "audition voice sample", "play adam voice")):
-        play_sfx("ack")
-        audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
-        _finish_command(cmd_id)
-        return
-
-    if any(k in query for k in ("switch to elevenlabs", "use elevenlabs", "switch to eleven labs", "use eleven labs", "switch to adam voice", "switch to adam", "activate elevenlabs")):
-        play_sfx("switch")
-        hud_config["tts_engine"] = "elevenlabs"
-        save_config()
-        el_key = hud_config.get("elevenlabs_api_key", "").strip()
-        if el_key:
-            terminal_feed_log("VOICE", "ElevenLabs Neural Voice Core Activated.")
-            speak("ElevenLabs neural voice engine activated with voice ID IRHApOXLvnW57QJPQH2P.", cmd_id=cmd_id)
-        else:
-            terminal_feed_log("VOICE", "ElevenLabs Voice Selected (Sample downloaded). API key required for live TTS.")
-            speak("ElevenLabs voice profile Adam is selected. Voice sample is downloaded and ready. To generate dynamic live speech, please add your ElevenLabs API key in the Voice Lab modal. Offline speech will continue using Microsoft David.", cmd_id=cmd_id)
-            _time.sleep(0.5)
-            if cmd_id == _current_command_id:
-                audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
-        _finish_command(cmd_id)
-        return
-
-    if any(k in query for k in ("switch to sapi", "switch to windows voice", "switch to offline voice", "use sapi", "use offline voice")):
+    if any(k in query for k in ("switch to sapi", "switch to windows voice", "switch to offline voice", "use sapi", "use offline voice", "default voice", "microsoft voice")):
         play_sfx("switch")
         hud_config["tts_engine"] = "sapi"
         save_config()
-        terminal_feed_log("VOICE", "Speech engine shifted to Windows offline SAPI.")
-        speak("Speech engine switched to Windows offline voice.", cmd_id=cmd_id)
+        terminal_feed_log("VOICE", "Speech engine confirmed on default Microsoft SAPI core.")
+        speak("Operating on default Microsoft speech core with natural pitch, sir.", cmd_id=cmd_id)
+        _finish_command(cmd_id)
+        return
+
+    if any(k in query for k in ("elevenlabs", "eleven labs", "adam voice")):
+        terminal_feed_log("VOICE", "External cloud voices disabled. Project configured for default Microsoft voices only.")
+        speak("This project is exclusively configured to use default Microsoft voices with authentic natural pitch, sir.", cmd_id=cmd_id)
         _finish_command(cmd_id)
         return
 
@@ -3830,7 +3753,7 @@ def execute_command_thread(raw_query, cmd_id=None):
             return
 
     # Weather Telemetry
-    if (any(w in query for w in ("weather", "temperature", "climate", "forecast", "mausam", "tapman")) or any(w in raw_query for w in ("मौसम", "तापमान", "क्लाइमेट", "फोरकास्ट", "बारिश"))) and not query.startswith("who is"):
+    if (any(w in query for w in ("weather", "wether", "temperature", "climate", "forecast", "mausam", "tapman")) or any(w in raw_query for w in ("मौसम", "तापमान", "क्लाइमेट", "फोरकास्ट", "बारिश"))) and not query.startswith("who is"):
         loc = extract_weather_location(raw_query)
         is_hi_w = is_devanagari(raw_query) or any(w in query for w in ("mausam", "tapman"))
         weather_telemetry(loc, cmd_id=cmd_id, is_hindi=is_hi_w)
@@ -4957,7 +4880,7 @@ def open_voice_audio_modal():
     win.grab_set()
 
     _label(win, "🎙️ VOICE PERSONALITY & CYBERNETIC AUDIO LAB", 12, C["cyan_br"], FN, "bold").pack(pady=(10, 2))
-    _label(win, "Manage offline SAPI synthesis cores, ElevenLabs neural voice, tempo modulation, and sci-fi audio effects:", 8, C["text_dim"], FN).pack(pady=(0, 6))
+    _label(win, "Manage offline Microsoft SAPI synthesis cores, natural voice pitch, and cybernetic audio effects:", 8, C["text_dim"], FN).pack(pady=(0, 6))
 
     # Scrollable container
     container = tk.Frame(win, bg="#020710")
@@ -5079,9 +5002,9 @@ def open_voice_audio_modal():
         b.pack(side="left", padx=2)
         to_buttons[s_val] = b
 
-    # 1. SECTION: VOICE PERSONALITY CORES (OFFLINE SAPI)
+    # 1. SECTION: VOICE PERSONALITY CORES (DEFAULT MICROSOFT SAPI)
     voice_sec = tk.LabelFrame(
-        content_box, text=" 🎙️ OFFLINE VOICE PROFILES (WINDOWS SAPI / PYTTSX3) ", font=(FN, 8, "bold"),
+        content_box, text=" 🎙️ DEFAULT MICROSOFT OFFLINE VOICES (WINDOWS SAPI / PYTTSX3) ", font=(FN, 8, "bold"),
         bg="#040e1a", fg=C["amber"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=8
     )
     voice_sec.pack(fill="x", pady=(0, 8))
@@ -5090,10 +5013,9 @@ def open_voice_audio_modal():
     voice_cards = []
 
     def refresh_voice_cards():
-        tts_mode = hud_config.get("tts_engine", "sapi")
         active_i = hud_config.get("voice_index", 0)
         for i, (cd, bdg, act_btn) in enumerate(voice_cards):
-            is_act = (i == active_i and tts_mode == "sapi")
+            is_act = (i == active_i)
             if is_act:
                 cd.config(highlightbackground=C["cyan_br"], bg="#06182c")
                 bdg.config(text="[ ✓ ACTIVE CURRENT ]", fg=C["cyan_br"])
@@ -5102,16 +5024,6 @@ def open_voice_audio_modal():
                 cd.config(highlightbackground=C["border"], bg="#030b14")
                 bdg.config(text="[ STANDBY ]", fg=C["muted"])
                 act_btn.config(text="▶ SELECT & APPLY", bg=C["panel"], fg=C["text"], state="normal")
-
-        # Update ElevenLabs card button
-        is_el = (tts_mode == "elevenlabs")
-        if "el_tog_btn" in globals_dict:
-            if is_el:
-                globals_dict["el_tog_btn"].config(text="✓ ACTIVE ENGINE", bg=C["border_gl"], fg=C["cyan_br"])
-            else:
-                globals_dict["el_tog_btn"].config(text="▶ SET AS PRIMARY TTS", bg=C["panel"], fg=C["text"])
-
-    globals_dict = {}
 
     for idx, vinfo in enumerate(voices):
         card = tk.Frame(voice_sec, bg="#030b14", highlightbackground=C["border"], highlightthickness=1, padx=8, pady=6)
@@ -5124,7 +5036,7 @@ def open_voice_audio_modal():
         title_line.pack(anchor="w")
 
         v_alias = vinfo.get("alias", "VOICE")
-        v_tag = vinfo.get("tag", "SYNTHESIS CORE")
+        v_tag = vinfo.get("tag", "MICROSOFT CORE")
         _label(title_line, f"◈ {v_alias}", 9, C["cyan_br"] if vinfo.get("is_female") else C["cyan"], FN, "bold").pack(side="left")
         _label(title_line, f" // {v_tag}", 8, C["amber"], FN).pack(side="left", padx=4)
 
@@ -5162,151 +5074,11 @@ def open_voice_audio_modal():
 
         voice_cards.append((card, bdg_lbl, act_b))
 
-    # 2. SECTION: ELEVENLABS NEURAL CLOUD VOICE
-    eleven_sec = tk.LabelFrame(
-        content_box, text=" ⚡ ELEVENLABS NEURAL VOICE CORE (CLOUD / HIGH-FIDELITY) ", font=(FN, 8, "bold"),
-        bg="#040e1a", fg=C["cyan_br"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=8
-    )
-    eleven_sec.pack(fill="x", pady=(0, 8))
-
-    el_card = tk.Frame(eleven_sec, bg="#030b14", highlightbackground=C["border"], highlightthickness=1, padx=8, pady=8)
-    el_card.pack(fill="x", pady=2)
-
-    el_head = tk.Frame(el_card, bg="#030b14")
-    el_head.pack(fill="x")
-
-    el_status = get_elevenlabs_voice_status("IRHApOXLvnW57QJPQH2P")
-    _label(el_head, f"◈ {el_status['name']}", 9, C["cyan_br"], FN, "bold").pack(side="left")
-    _label(el_head, " // NEURAL VOICE ID: IRHApOXLvnW57QJPQH2P", 8, C["amber"], FN).pack(side="left", padx=4)
-
-    el_badge = _label(
-        el_head,
-        f"[ ✓ DOWNLOADED & READY ({el_status['size_kb']} KB) ]" if el_status["downloaded"] else "[ ⬇ DOWNLOAD REQUIRED ]",
-        8,
-        C["green"] if el_status["downloaded"] else C["red"],
-        FN, "bold"
-    )
-    el_badge.pack(side="left", padx=6)
-
-    _label(
-        el_card,
-        f"Persona: {el_status['description']} (Accent: {el_status['accent'].capitalize()} | Gender: {el_status['gender'].capitalize()})",
-        7, C["text_dim"], FN
-    ).pack(anchor="w", pady=(2, 6))
-
-    # Control buttons row
-    el_btn_row = tk.Frame(el_card, bg="#030b14")
-    el_btn_row.pack(fill="x", pady=(2, 6))
-
-    def _do_audition_eleven():
-        play_sfx("ack")
-        audition_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
-
-    def _do_download_eleven():
-        play_sfx("downlink")
-        el_down_btn.config(text="⬇ DOWNLOADING...", state="disabled")
-        win.update()
-        def _bg():
-            succ, meta, path, msg = download_elevenlabs_voice("IRHApOXLvnW57QJPQH2P")
-            def _ui():
-                st = get_elevenlabs_voice_status("IRHApOXLvnW57QJPQH2P")
-                if succ:
-                    el_badge.config(text=f"[ ✓ DOWNLOADED ({st['size_kb']} KB) ]", fg=C["green"])
-                    terminal_feed_log("VOICE", f"ElevenLabs voice sample saved ({st['size_kb']} KB).")
-                else:
-                    el_badge.config(text="[ DOWNLOAD ERROR ]", fg=C["red"])
-                    terminal_feed_log("VOICE", f"ElevenLabs download note: {msg}")
-                el_down_btn.config(text="⬇ RE-DOWNLOAD SAMPLE", state="normal")
-            win.after(0, _ui)
-        threading.Thread(target=_bg, daemon=True).start()
-
-    def _toggle_eleven_engine():
-        play_sfx("switch")
-        cur_eng = hud_config.get("tts_engine", "sapi")
-        if cur_eng == "elevenlabs":
-            hud_config["tts_engine"] = "sapi"
-            save_config()
-            refresh_voice_cards()
-            terminal_feed_log("VOICE", "Speech engine switched to Windows SAPI.")
-            speak("Speech engine switched to Windows offline voice.")
-        else:
-            hud_config["tts_engine"] = "elevenlabs"
-            save_config()
-            refresh_voice_cards()
-            terminal_feed_log("VOICE", "Speech engine switched to ElevenLabs Neural.")
-            el_key = hud_config.get("elevenlabs_api_key", "").strip()
-            if not el_key:
-                speak("ElevenLabs voice core selected. Downloaded voice sample is ready. To enable dynamic live speech generation, please enter your ElevenLabs API key.")
-            else:
-                speak("ElevenLabs neural voice core online and active.")
-
-    is_el_active = (hud_config.get("tts_engine", "sapi") == "elevenlabs")
-
-    el_tog_btn = tk.Button(
-        el_btn_row,
-        text="✓ ACTIVE ENGINE" if is_el_active else "▶ SET AS PRIMARY TTS",
-        font=(FN, 7, "bold"),
-        bg=C["border_gl"] if is_el_active else C["panel"],
-        fg=C["cyan_br"] if is_el_active else C["text"],
-        activebackground=C["cyan"], bd=0, padx=8, pady=4, cursor="hand2",
-        command=_toggle_eleven_engine
-    )
-    el_tog_btn.pack(side="left", padx=2)
-    globals_dict["el_tog_btn"] = el_tog_btn
-
-    tk.Button(
-        el_btn_row, text="🔊 AUDITION DOWNLOADED SAMPLE", font=(FN, 7),
-        bg=C["border_gl"], fg=C["text_dim"], activebackground=C["cyan_br"], bd=0, padx=8, pady=4, cursor="hand2",
-        command=_do_audition_eleven
-    ).pack(side="left", padx=2)
-
-    el_down_btn = tk.Button(
-        el_btn_row, text="⬇ RE-DOWNLOAD SAMPLE", font=(FN, 7),
-        bg=C["border_gl"], fg=C["text_dim"], activebackground=C["cyan_br"], bd=0, padx=8, pady=4, cursor="hand2",
-        command=_do_download_eleven
-    )
-    el_down_btn.pack(side="left", padx=2)
-
-    # API Key row for dynamic speech generation
-    api_f = tk.Frame(el_card, bg="#020810", highlightbackground=C["border"], highlightthickness=1, padx=6, pady=4)
-    api_f.pack(fill="x", pady=(4, 2))
-
-    _label(api_f, "🔑 ElevenLabs API Key (Optional for dynamic live speech):", 7, C["text_dim"], FN).pack(side="left", padx=(0, 6))
-
-    key_entry = tk.Entry(api_f, font=(FN, 8), bg="#051525", fg=C["cyan_br"], insertbackground=C["cyan_br"], bd=1, relief="solid", show="*")
-    saved_key = hud_config.get("elevenlabs_api_key", "")
-    if saved_key:
-        key_entry.insert(0, saved_key)
-    key_entry.pack(side="left", fill="x", expand=True, padx=4)
-
-    def _toggle_key_vis():
-        if key_entry.cget("show") == "*":
-            key_entry.config(show="")
-            vis_btn.config(text="HIDE")
-        else:
-            key_entry.config(show="*")
-            vis_btn.config(text="SHOW")
-
-    vis_btn = tk.Button(api_f, text="SHOW", font=(FN, 7), bg=C["panel"], fg=C["text_dim"], bd=0, padx=6, pady=2, cursor="hand2", command=_toggle_key_vis)
-    vis_btn.pack(side="left", padx=2)
-
-    def _save_api_key():
-        play_sfx("ack")
-        k = key_entry.get().strip()
-        hud_config["elevenlabs_api_key"] = k
-        save_config()
-        terminal_feed_log("CONFIG", "ElevenLabs API key updated.")
-        speak("ElevenLabs API key saved successfully.")
-
-    tk.Button(api_f, text="💾 SAVE KEY", font=(FN, 7, "bold"), bg=C["cyan_dim"], fg=C["cyan_br"], bd=0, padx=8, pady=2, cursor="hand2", command=_save_api_key).pack(side="left", padx=2)
-
-    _label(el_card, "* Voice sample is saved locally in voices/ and plays offline. Free API key from elevenlabs.io enables live dynamic TTS.", 7, C["muted"], FN).pack(anchor="w", pady=(2, 0))
-
     refresh_voice_cards()
 
-    # 3. SECTION: SPEECH RATE (TEMPO)
+    # 2. SECTION: SPEECH RATE & TEMPO (NATURAL MICROSOFT PITCH)
     rate_sec = tk.LabelFrame(
-        content_box, text=" ⚡ SPEECH TEMPO & RATE MODULATION ", font=(FN, 8, "bold"),
+        content_box, text=" ⚡ SPEECH TEMPO & RATE (NATURAL MICROSOFT PITCH) ", font=(FN, 8, "bold"),
         bg="#040e1a", fg=C["amber"], bd=1, highlightbackground=C["border_gl"], highlightthickness=1, padx=10, pady=6
     )
     rate_sec.pack(fill="x", pady=(0, 8))
@@ -5324,7 +5096,7 @@ def open_voice_audio_modal():
         rate_var_lbl.config(text=f"Current Rate: {r_val} WPM  ⟫")
         speak(f"Speech tempo set to {r_val} words per minute.")
 
-    for r_lbl, r_num in (("150 WPM [CALM]", 150), ("175 WPM [NOMINAL]", 175), ("200 WPM [TACTICAL]", 200), ("230 WPM [TURBO]", 230)):
+    for r_lbl, r_num in (("150 WPM [CALM]", 150), ("175 WPM [NOMINAL - NATURAL PITCH]", 175), ("200 WPM [TACTICAL]", 200), ("230 WPM [TURBO]", 230)):
         tk.Button(
             rate_btns_frame, text=r_lbl, font=(FN, 7),
             bg=C["panel"], fg=C["text_dim"], activebackground=C["cyan"], bd=0, padx=6, pady=3, cursor="hand2",

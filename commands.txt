@@ -244,20 +244,21 @@ Voice / Text Commands for SFX:
 - Master SFX Switch & Soundboard: Open "[🎙️ VOICE & AUDIO LAB]" to audition every sound!
 
 ============================================================
-⚡ ELEVENLABS NEURAL VOICE (ID: IRHApOXLvnW57QJPQH2P - ADAM)
+🎙️ DEFAULT MICROSOFT OFFLINE VOICES (NATURAL PITCH)
 ============================================================
-Jarvis now integrates ElevenLabs Neural TTS alongside offline SAPI:
-- Voice ID: IRHApOXLvnW57QJPQH2P
-- Persona: Adam - American, Dark and Tough (Hero/Action Cybernetic Voice)
-- Offline Sample: voices/elevenlabs_IRHApOXLvnW57QJPQH2P_preview.mp3 (276 KB)
-- Metadata: voices/IRHApOXLvnW57QJPQH2P.json
+Jarvis operates exclusively on default Microsoft Windows SAPI offline voices:
+- J.A.R.V.I.S Tactical Core: Microsoft David Desktop - English (United States)
+- F.R.I.D.A.Y Neural Core:   Microsoft Zira Desktop - English (United States)
+- Natural Pitch: Operates at native 16kHz audio stream format with Rate = 0 baseline
+  for 100% natural, authentic voice pitch with zero resampling distortion or pitch warping.
 
-Voice & Text Commands for ElevenLabs:
-- "Download voice" / "Download elevenlabs voice" -> Fetches latest profile & audio preview
-- "Audition elevenlabs" / "Play voice sample"     -> Auditions downloaded Adam voice audio
-- "Switch to elevenlabs" / "Switch to adam voice"  -> Sets ElevenLabs as primary voice engine
-- "Switch to sapi" / "Switch to offline voice"    -> Switches back to Windows SAPI David/Zira
-- GUI Control & API Key: Open "[🎙️ VOICE & AUDIO LAB]" to enter your XI-API-KEY for live dynamic cloud speech!
+Voice & Text Commands for Speech & Voice Profiles:
+- "Switch to David" / "Switch to male voice"   -> Activates Microsoft David Tactical Core
+- "Switch to Zira" / "Switch to female voice"  -> Activates Microsoft Zira Neural Core
+- "Switch to Friday" / "Switch to Jarvis"      -> Personality profile switch
+- "Preview voice" / "Audition voice"           -> Auditions active Microsoft voice profile
+- "Switch to SAPI" / "Default voice"           -> Confirms native Microsoft SAPI synthesis
+- GUI Control: Open "[🎙️ VOICE & AUDIO LAB]" to select, audition, and configure speech rate!
 
 ============================================================
 🌐 BILINGUAL HINDI & ENGLISH COMMANDS (हिन्दी और अंग्रेज़ी)
