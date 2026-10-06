@@ -11,7 +11,7 @@ A Python-based personal voice assistant that allows users to interact with their
 ![Platform](https://img.shields.io/badge/Platform-Windows-0078D6)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Stars](https://img.shields.io/github/stars/ishantSingh3142/AI-ASSISTANT-JARVIS?style=social)
+![Stars](https://img.shields.io/github/stars/ishantSingh3142/AI-ASSISTANT-?style=social)
 
 ---
 
@@ -218,13 +218,13 @@ If it still fails, check the Python version and architecture installed on your c
 Open Terminal / Command Prompt and run:
 
 ```bash
-git clone https://github.com/ishantSingh3142/AI-ASSISTANT-JARVIS.git
+git clone https://github.com/ishantSingh3142/AI-ASSISTANT-.git
 ```
 
 Move into the project folder:
 
 ```bash
-cd AI-ASSISTANT-JARVIS
+cd AI-ASSISTANT-
 ```
 
 Step 2 — Install Dependencies
@@ -465,7 +465,7 @@ The long-term goal is to evolve this project from a basic voice assistant into a
 ## 📬 Connect With Me
 
 - **GitHub**: [@ishantSingh3142](https://github.com/ishantSingh3142)
-- **Repository**: [ishantSingh3142/AI-ASSISTANT-JARVIS](https://github.com/ishantSingh3142/AI-ASSISTANT-JARVIS)
+- **Repository**: [ishantSingh3142/AI-ASSISTANT-](https://github.com/ishantSingh3142/AI-ASSISTANT-)
 
 ---
 

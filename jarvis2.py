@@ -1898,7 +1898,7 @@ def extract_comparison_entities(query):
     return None
 
 def fetch_deep_wikipedia(entity):
-    headers = {"User-Agent": "Jarvis-HUD-Intel/3.8 (https://github.com/ishantSingh3142/AI-ASSISTANT-JARVIS)"}
+    headers = {"User-Agent": "Jarvis-HUD-Intel/3.8 (https://github.com/ishantSingh3142/AI-ASSISTANT-)"}
     try:
         search_url = "https://en.wikipedia.org/w/api.php"
         params = {"action": "query", "list": "search", "srsearch": entity, "format": "json", "utf8": 1, "srlimit": 5}
