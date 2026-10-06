@@ -7,8 +7,8 @@ A Python-based personal voice assistant that allows users to interact with their
 ## 📛 **Badges**
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
-![Flask](https://img.shields.io/badge/Flask-Web%20Framework-red)
-![Socket.IO](https://img.shields.io/badge/WebSocket-Socket.IO-yellow)
+![Tkinter](https://img.shields.io/badge/GUI-Tkinter%20HUD-cyan)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Stars](https://img.shields.io/github/stars/ishantSingh3142/AI-ASSISTANT-JARVIS?style=social)
@@ -452,32 +452,36 @@ Add Hindi and other language support for voice commands and responses.
 The long-term goal is to evolve this project from a basic voice assistant into a more capable AI-powered personal desktop assistant.
 
 </details>
-📸 Project Preview
-JARVIS AI Interface
+---
 
-<img src="banner.jpg" alt="Jarvis Banner" width="100%" height="300">
+## 📸 Project Preview
 
-Connect With Me
-> GitHub: <https://github.com/ishantSingh3142>
+<p align="center">
+  <img src="banner.jpg" alt="Jarvis Banner" width="100%">
+</p>
 
-🙏 Thank You
+---
 
-Thank you for visiting the JARVIS AI Voice Assistant project!
+## 📬 Connect With Me
+
+- **GitHub**: [@ishantSingh3142](https://github.com/ishantSingh3142)
+- **Repository**: [ishantSingh3142/AI-ASSISTANT-JARVIS](https://github.com/ishantSingh3142/AI-ASSISTANT-JARVIS)
+
+---
+
+## 🙏 Thank You
+
+Thank you for visiting the **JARVIS AI Voice Assistant** project!
 
 If you find this project useful or interesting:
 
-⭐ Star the repository
-
-🍴 Fork the repository
-
-🐛 Report issues
-
-💡 Suggest improvements
+- ⭐ **Star** the repository
+- 🍴 **Fork** the repository
+- 🐛 **Report issues**
+- 💡 **Suggest improvements**
 
 Contributions and suggestions are always welcome.
 
 <p align="center">
-
-🤖 JARVIS AI — Your Voice, Your Assistant.
-
+  <strong>🤖 JARVIS AI — Your Voice, Your Assistant.</strong>
 </p>
