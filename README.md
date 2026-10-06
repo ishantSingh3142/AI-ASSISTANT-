@@ -212,6 +212,43 @@ pip install PyAudio
 If it still fails, check the Python version and architecture installed on your computer.
 
 </details>
+<details> <summary><strong>☕ Java / JDK Environment & Prerequisites</strong></summary>
+
+### 📌 Java Development Kit (JDK) Setup
+
+If your workstation environment or companion toolchains (such as Android CLI, build utilities, or audio processors) require Java:
+
+> **Note on Repository Binary Exclusion:** The local `oracleJdk-26` runtime (~372 MB) is excluded from this Git repository via `.gitignore` to maintain a lightweight codebase and comply with GitHub's 100 MB single-file upload limit (`oracleJdk-26/lib/modules` is ~146.7 MB). Please install JDK locally using the instructions below.
+
+#### 1. Automated Installation (Windows)
+
+Install the JDK using Windows Package Manager (`winget`):
+
+```powershell
+# Install Oracle JDK
+winget install Oracle.JDK.23
+
+# Or install Microsoft OpenJDK (LTS)
+winget install Microsoft.OpenJDK.21
+```
+
+#### 2. Manual Installer Download
+
+Download the official distribution directly:
+* **Oracle Java SE Downloads:** [https://www.oracle.com/java/technologies/downloads/](https://www.oracle.com/java/technologies/downloads/)
+* **Adoptium Eclipse Temurin OpenJDK:** [https://adoptium.net/](https://adoptium.net/)
+
+#### 3. Verify System PATH
+
+Verify that Java is recognized in your terminal:
+
+```powershell
+java -version
+```
+
+Ensure `JAVA_HOME` is set in your Windows System Environment Variables pointing to your JDK root directory (e.g., `C:\Program Files\Java\jdk-23`).
+
+</details>
 <details> <summary><strong>📥 How to Download and Run the Project</strong></summary>
 ## Step 1 — Clone the Repository
 

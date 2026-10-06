@@ -216,6 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Binary JDK runtime (exceeds GitHub 100MB file limit)
 oracleJdk-26/
 cache/
 *.tmp
