@@ -11,7 +11,7 @@ A Python-based personal voice assistant that allows users to interact with their
 ![Socket.IO](https://img.shields.io/badge/WebSocket-Socket.IO-yellow)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-green)
-![Stars](https://img.shields.io/github/stars/yourrepo?style=social)
+![Stars](https://img.shields.io/github/stars/ishantSingh3142/AI-ASSISTANT-JARVIS?style=social)
 
 ---
 
@@ -217,13 +217,15 @@ If it still fails, check the Python version and architecture installed on your c
 
 Open Terminal / Command Prompt and run:
 
-```python
-git clone https://github.com/alok-kumar8765/jarvis-ai-voice-assistant.git
+```bash
+git clone https://github.com/ishantSingh3142/AI-ASSISTANT-JARVIS.git
 ```
 
 Move into the project folder:
 
-cd jarvis-ai-voice-assistant
+```bash
+cd AI-ASSISTANT-JARVIS
+```
 
 Step 2 — Install Dependencies
 
@@ -456,8 +458,7 @@ JARVIS AI Interface
 <img src="banner.jpg" alt="Jarvis Banner" width="100%" height="300">
 
 Connect With Me
-> GitHub: <https://github.com/alok-kumar8765>
-Email: <alokkaushal42@gmail.com>
+> GitHub: <https://github.com/ishantSingh3142>
 
 🙏 Thank You
 
